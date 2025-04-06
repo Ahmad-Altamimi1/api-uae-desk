@@ -32,7 +32,7 @@ class ahmad extends Controller
             return response()->json([
                 'user' => $user,
                 "message" => "User logged in successfully.",
-                'access_token' => "Bearer " . $token,
+                'access_token' => $token,
             ], 200);
         }
 

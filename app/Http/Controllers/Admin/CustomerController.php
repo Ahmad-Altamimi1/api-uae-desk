@@ -45,13 +45,12 @@ class CustomerController extends Controller
     }
     public function index(Request $request)
     {
-        if ($request->ajax()) {
-            if (auth()->user()->hasRole('operator')) {
+            if (auth()->user()->hasRole('operator')||true) {
                 $customers = Customer::with(['services', 'branch'])
                     ->where('created_by', auth()->id())
                     ->where('status', '!=', 3)
                     ->get();
-            } else if (auth()->user()->hasRole('expert')) {
+            } elseif (auth()->user()->hasRole('expert')) {
                 $customers = Customer::with(['services', 'branch'])
                     ->where('status', '!=', 0)
                     ->get();
@@ -60,106 +59,53 @@ class CustomerController extends Controller
                     ->orderBy('updated_at', 'desc')
                     ->get();
             }
-
-            return datatables()->of($customers)
-                ->addIndexColumn()
-                ->addColumn('branch', function ($row) {
-                    return $row->branch ? $row->branch->branch_name : null;
-                })
-                ->addColumn('services', function ($row) {
-                    // Display multiple service names as a comma-separated string
-                    return $row->services->pluck('name')->implode(', ');
-                })
-
-                ->addColumn('created_reviewed_by', function ($row) {
-                    if (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('supervisor')) {
-                        $createdBy = $row->creator ? $row->creator->name : 'N/A';
-                        $reviewedBy = $row->review ? $row->review->name : 'N/A';
-
-                        return "<strong>Created By:</strong> $createdBy <br> <strong>Reviewed By:</strong> $reviewedBy";
-                    }
-                    return '';
-                })
-                ->addColumn('action', function ($row) {
-                    $view = Gate::check('customers-view') || auth()->user()->hasRole('supervisor') ?
-                        '<a href="' . route('customers.show', $row->id) . '" class="btn btn-info btn-sm mr-1">
-                            <i class="fe fe-eye"></i> ' . __('View') . '
-                         </a>' : '';
-
-                    $mediaButton = Gate::check('customers-upload-media') || auth()->user()->hasRole('supervisor') ?
-                        '<a href="' . route('customers.media', $row->id) . '" class="btn btn-secondary btn-sm mr-1">
-                             <i class="fe fe-upload"></i> ' . __('Upload Media') . '
-                         </a>' : '';
-
-                    $edit = '';
-                    if (Gate::check('customers-edit') || auth()->user()->hasRole('supervisor')) {
-                        if (auth()->user()->hasRole('operator') && $row->status == 0 || $row->status == 1) {
-                            $edit = '<a href="' . route('customers.edit', $row->id) . '" class="btn btn-warning btn-sm mr-1">
-                                        <i class="fe fe-pencil"></i> ' . __('Edit') . '
-                                     </a>';
-                        }
-                    } elseif (auth()->user()->hasRole('supervisor')) {
-                        $edit = '<a href="' . route('customers.edit', $row->id) . '" class="btn btn-warning btn-sm mr-1">
-                                    <i class="fe fe-pencil"></i> ' . __('Edit') . '
-                                 </a>';
-                    }
-
-                    $delete = Gate::check('customers-delete') ?
-                        '<button class="btn btn-danger btn-sm remove-customer" data-id="' . $row->id . '" data-action="' . route('customers.destroy', $row->id) . '">
-                            <i class="fe fe-trash"></i> ' . __('Delete') . '
-                         </button>' : '';
-
-                    $printInvoice =
-                        '<a href="' . route('invoices.view', ['id' => $row->id]) . '" target="_blank" class="btn btn-primary btn-sm mr-1">
-                            <i class="fe fe-printer"></i> ' . __('View Invoice') . '
-                        </a>';
-
-                    $indicator = null;
-                    if (auth()->user()->hasRole('operator')) {
-                        $documentRequestExists = DocumentRequest::where('customer_id', $row->id)
-                            ->where('is_viewed', false)
-                            ->exists();
-
-                        if ($documentRequestExists) {
-                            $indicator = '<button type="button" class="btn btn-danger btn-sm blink-indicator" 
-                                data-customer-id="' . $row->id . '" 
-                                data-customer-name="' . $row->first_name . '">
-                                <i class="fe fe-bell"></i>
-                              </button>';
-                        }
-                    }
-                    $statement = (Gate::check('customers-account') || auth()->user()->hasRole('supervisor') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')) ?
-                        '<a href="' . route('customers.account-statement', $row->id) . '" class="btn btn-secondary btn-sm mr-1">
-                            <i class="fe fe-credit-card"></i> ' . __('Account') . '
-                         </a>' : '';
-                    return $view . ' ' . $edit . ' ' . $delete . ' ' . $mediaButton . ' ' . $printInvoice . ' ' . $indicator . ' ' . $statement;
-                })
-                ->addColumn('status', function ($customer) {
-                    $statusClasses = [
-                        0 => 'badge-warning',
-                        1 => 'badge-info',
-                        2 => 'badge-primary',
-                        3 => 'badge-success',
-                    ];
-
-                    $statusTexts = [
-                        0 => 'Pending',
-                        1 => 'In Process',
-                        2 => 'Verified',
-                        3 => 'Completed',
-                    ];
-
-                    $statusClass = $statusClasses[$customer->status] ?? 'badge-secondary';
-                    $statusText = $statusTexts[$customer->status] ?? 'Unknown';
-
-                    return '<span class="badge ' . $statusClass . '">' . $statusText . '</span>';
-                })
-                ->rawColumns(['status', 'action']) // Allows the status column to render HTML
-                ->make(true);
-        }
-
-        return view('admin.customers.index');
+    
+            return response()->json($customers->map(function ($customer) {
+                return [
+                    'id' => $customer->id,
+                    'first_name' => $customer->first_name,
+                    'last_name' => $customer->last_name,
+                    'branch' => $customer->branch ? $customer->branch->branch_name : null,
+                    'services' => $customer->services->pluck('name'),
+                    'created_reviewed_by' => (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('supervisor'))
+                        ? [
+                            'created_by' => $customer->creator ? $customer->creator->name : 'N/A',
+                            'reviewed_by' => $customer->review ? $customer->review->name : 'N/A',
+                        ] : null,
+                    'status' => [
+                        'class' => [
+                            0 => 'badge-warning',
+                            1 => 'badge-info',
+                            2 => 'badge-primary',
+                            3 => 'badge-success',
+                        ][$customer->status] ?? 'badge-secondary',
+                        'text' => [
+                            0 => 'Pending',
+                            1 => 'In Process',
+                            2 => 'Verified',
+                            3 => 'Completed',
+                        ][$customer->status] ?? 'Unknown',
+                    ],
+                    // 'actions' => [
+                    //     'view' => (Gate::check('customers-view') || auth()->user()->hasRole('supervisor'))
+                    //         ? route('customers.show', $customer->id) : null,
+                    //     'edit' => (Gate::check('customers-edit') || auth()->user()->hasRole('supervisor')) &&
+                    //         (auth()->user()->hasRole('operator') && in_array($customer->status, [0, 1]) || auth()->user()->hasRole('supervisor'))
+                    //         ? route('customers.edit', $customer->id) : null,
+                    //     'delete' => Gate::check('customers-delete')
+                    //         ? route('customers.destroy', $customer->id) : null,
+                    //     'upload_media' => (Gate::check('customers-upload-media') || auth()->user()->hasRole('supervisor'))
+                    //         ? route('customers.media', $customer->id) : null,
+                    //     'print_invoice' => route('invoices.view', ['id' => $customer->id]),
+                    //     'account_statement' => (Gate::check('customers-account') || auth()->user()->hasRole('supervisor') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'))
+                    //         ? route('customers.account-statement', $customer->id) : null,
+                    // ],
+                    'document_indicator' => auth()->user()->hasRole('operator') && DocumentRequest::where('customer_id', $customer->id)->where('is_viewed', false)->exists(),
+                ];
+            }));
+    
     }
+    
 
 
     public function create()
