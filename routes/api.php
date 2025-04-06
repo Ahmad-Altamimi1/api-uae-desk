@@ -25,4 +25,26 @@ Route::middleware(['auth:api', 'permission:user-list'])->get('/user', function (
     $permissions = $user->getAllPermissions();
     return response()->json(['user' => $user, 'permissions' => $permissions]);
 });
-C:\xampp\htdocs\UAE-desk\backend\routes\api.php
+// ->middleware(['auth:api', 'permission:user-list'])
+Route::prefix('customers')->middleware(['auth:api'])->group(function () {
+    Route::get('/index', [App\Http\Controllers\Admin\CustomerController::class, 'index'])->name('customers.index');
+    Route::get('/create', [App\Http\Controllers\Admin\CustomerController::class, 'create'])->name('customers.create');
+    Route::post('/store', [App\Http\Controllers\Admin\CustomerController::class, 'store'])->name('customers.store');
+    Route::get('/edit/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'edit'])->name('customers.edit');
+    Route::post('/update/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'update'])->name('customers.update');
+    Route::post('/destroy', [App\Http\Controllers\Admin\CustomerController::class, 'destroy'])->name('customers.destroy');
+    Route::get('/view/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'show'])->name('customers.show');
+    Route::get('accountStatement/view/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'accountStatement'])->name('customers.account-statement');
+    Route::post('/importcustomers', [App\Http\Controllers\Admin\CustomerController::class, 'importCustomers'])->name('customers.import');
+    Route::post('/media/store/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'storeMedia'])->name('customers.media.store'); // Store Media
+    Route::post('/upload/fta-docuemnt/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'storeFtaMedia'])->name('customers.upload.fta_document');
+    Route::match(['post', 'put'], '/update/fta-docuemnt/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'updateFtaDocument'])->name('customers.updateFtaDocument');
+    Route::get('/media/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'media'])->name('customers.media'); // Media Upload Route
+    Route::delete('/media/delete/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'deleteMedia'])->name('customers.media.delete');
+    Route::post('/{id}/submit-verification', [App\Http\Controllers\Admin\CustomerController::class, 'submitForVerification'])->name('customers.submit.verification');
+    Route::post('/{customer}/submit-review', [App\Http\Controllers\Admin\CustomerController::class, 'submitForReview'])->name('customers.submit.review');
+    Route::post('/{customer}/request-document', [App\Http\Controllers\Admin\CustomerController::class, 'requestDocument'])->name('customers.request.document');
+    Route::post('/{customer}/add-tax-id', [App\Http\Controllers\Admin\CustomerController::class, 'addTaxId'])->name('customers.add.tax_id');
+    Route::post('/customers/edit-status', [App\Http\Controllers\Admin\CustomerController::class, 'editStatus'])->name('customers.edit.status');
+    Route::post('/customers/updateCreator', [App\Http\Controllers\Admin\CustomerController::class, 'updateCreator'])->name('customers.edit.creator');
+});
