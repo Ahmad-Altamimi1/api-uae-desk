@@ -65,6 +65,10 @@ class CustomerController extends Controller
                     'id' => $customer->id,
                     'first_name' => $customer->first_name,
                     'last_name' => $customer->last_name,
+                    'business_name' => $customer->business_name,
+                    'phone_number' => $customer->phone_number,
+                    'email' => $customer->email,
+                    
                     'branch' => $customer->branch ? $customer->branch->branch_name : null,
                     'services' => $customer->services->pluck('name'),
                     'created_reviewed_by' => (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('supervisor'))
@@ -72,20 +76,7 @@ class CustomerController extends Controller
                             'created_by' => $customer->creator ? $customer->creator->name : 'N/A',
                             'reviewed_by' => $customer->review ? $customer->review->name : 'N/A',
                         ] : null,
-                    'status' => [
-                        'class' => [
-                            0 => 'badge-warning',
-                            1 => 'badge-info',
-                            2 => 'badge-primary',
-                            3 => 'badge-success',
-                        ][$customer->status] ?? 'badge-secondary',
-                        'text' => [
-                            0 => 'Pending',
-                            1 => 'In Process',
-                            2 => 'Verified',
-                            3 => 'Completed',
-                        ][$customer->status] ?? 'Unknown',
-                    ],
+                    'status' =>$customer->status,
                     // 'actions' => [
                     //     'view' => (Gate::check('customers-view') || auth()->user()->hasRole('supervisor'))
                     //         ? route('customers.show', $customer->id) : null,

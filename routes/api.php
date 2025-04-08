@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ahmad;
 use App\Http\Controllers\Auth\LoginController;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
@@ -18,6 +19,10 @@ use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
 */
 
 Route::get('/sanctum/csrf-cookie', [CsrfCookieController::class, 'show']);
+Route::get('/test', function () {
+    return response()->json(['message' => User::all()]);
+});
+
 Route::post('/login', [ahmad::class, 'login']);
 // Route::post('/login', [LoginController::class, 'login']);
 Route::middleware(['auth:api', 'permission:user-list'])->get('/user', function (Request $request) {
@@ -47,4 +52,27 @@ Route::prefix('customers')->middleware(['auth:api'])->group(function () {
     Route::post('/{customer}/add-tax-id', [App\Http\Controllers\Admin\CustomerController::class, 'addTaxId'])->name('customers.add.tax_id');
     Route::post('/customers/edit-status', [App\Http\Controllers\Admin\CustomerController::class, 'editStatus'])->name('customers.edit.status');
     Route::post('/customers/updateCreator', [App\Http\Controllers\Admin\CustomerController::class, 'updateCreator'])->name('customers.edit.creator');
+});
+
+
+
+// Role
+Route::prefix('roles')->middleware(['auth:api'])->group(function () {
+    Route::get('/index', [App\Http\Controllers\Admin\RoleController::class, 'index'])->name('roles.index');
+    Route::get('/create', [App\Http\Controllers\Admin\RoleController::class, 'create'])->name('roles.create');
+    Route::post('/store', [App\Http\Controllers\Admin\RoleController::class, 'store'])->name('roles.store');
+    Route::get('/edit/{id}', [App\Http\Controllers\Admin\RoleController::class, 'edit'])->name('roles.edit');
+    Route::post('/update/{id}', [App\Http\Controllers\Admin\RoleController::class, 'update'])->name('roles.update');
+    Route::post('/destroy', [App\Http\Controllers\Admin\RoleController::class, 'destroy'])->name('roles.destroy');
+});
+
+
+// Permission
+Route::prefix('permissions')->middleware(['auth:api'])->group(function () {
+    Route::get('/index', [App\Http\Controllers\Admin\PermissionController::class, 'index'])->name('permissions.index');
+    Route::get('/create', [App\Http\Controllers\Admin\PermissionController::class, 'create'])->name('permissions.create');
+    Route::post('/store', [App\Http\Controllers\Admin\PermissionController::class, 'store'])->name('permissions.store');
+    Route::get('/edit/{id}', [App\Http\Controllers\Admin\PermissionController::class, 'edit'])->name('permissions.edit');
+    Route::post('/update/{id}', [App\Http\Controllers\Admin\PermissionController::class, 'update'])->name('permissions.update');
+    Route::post('/destroy', [App\Http\Controllers\Admin\PermissionController::class, 'destroy'])->name('permissions.destroy');
 });

@@ -50,7 +50,28 @@ class PermissionController extends Controller
 	public function index(Request $request)
 	{
 		$permissions = Permission::all();
-		return view('admin.permissions.index', compact('permissions'));
+		// return view('admin.permissions.index', compact('permissions'));
+		return response()->json($permissions->map(function ($permission) {
+			return [
+				'id' => $permission->id,
+				'name' => $permission->name,
+
+				// 'actions' => [
+				//     'view' => (Gate::check('customers-view') || auth()->user()->hasRole('supervisor'))
+				//         ? route('customers.show', $customer->id) : null,
+				//     'edit' => (Gate::check('customers-edit') || auth()->user()->hasRole('supervisor')) &&
+				//         (auth()->user()->hasRole('operator') && in_array($customer->status, [0, 1]) || auth()->user()->hasRole('supervisor'))
+				//         ? route('customers.edit', $customer->id) : null,
+				//     'delete' => Gate::check('customers-delete')
+				//         ? route('customers.destroy', $customer->id) : null,
+				//     'upload_media' => (Gate::check('customers-upload-media') || auth()->user()->hasRole('supervisor'))
+				//         ? route('customers.media', $customer->id) : null,
+				//     'print_invoice' => route('invoices.view', ['id' => $customer->id]),
+				//     'account_statement' => (Gate::check('customers-account') || auth()->user()->hasRole('supervisor') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'))
+				//         ? route('customers.account-statement', $customer->id) : null,
+				// ],
+			];
+		}));
 	}
 
 	public function create()
