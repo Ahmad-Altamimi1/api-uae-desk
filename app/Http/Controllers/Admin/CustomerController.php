@@ -68,7 +68,9 @@ class CustomerController extends Controller
                     'business_name' => $customer->business_name,
                     'phone_number' => $customer->phone_number,
                     'email' => $customer->email,
-                    
+                    'customer_code' => $customer->customer_code,
+
+
                     'branch' => $customer->branch ? $customer->branch->branch_name : null,
                     'services' => $customer->services->pluck('name'),
                     'created_reviewed_by' => (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('supervisor'))

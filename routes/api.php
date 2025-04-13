@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\Http\Controllers\CsrfCookieController;
+use Haruncpi\LaravelUserActivity\Models\Log;
 
 /*
 |--------------------------------------------------------------------------
@@ -75,4 +76,62 @@ Route::prefix('permissions')->middleware(['auth:api'])->group(function () {
     Route::get('/edit/{id}', [App\Http\Controllers\Admin\PermissionController::class, 'edit'])->name('permissions.edit');
     Route::post('/update/{id}', [App\Http\Controllers\Admin\PermissionController::class, 'update'])->name('permissions.update');
     Route::post('/destroy', [App\Http\Controllers\Admin\PermissionController::class, 'destroy'])->name('permissions.destroy');
+});
+
+// Services
+Route::prefix('services')->middleware(['auth:api'])->group(function () {
+    Route::get('/index', [App\Http\Controllers\Admin\ServiceController::class, 'index'])->name('services.index');
+    Route::get('/create', [App\Http\Controllers\Admin\ServiceController::class, 'create'])->name('services.create');
+    Route::post('/store', [App\Http\Controllers\Admin\ServiceController::class, 'store'])->name('services.store');
+    Route::get('/edit/{id}', [App\Http\Controllers\Admin\ServiceController::class, 'edit'])->name('services.edit');
+    Route::post('/update/{id}', [App\Http\Controllers\Admin\ServiceController::class, 'update'])->name('services.update');
+    Route::post('/destroy', [App\Http\Controllers\Admin\ServiceController::class, 'destroy'])->name('services.destroy');
+});
+
+
+// Branches
+Route::prefix('branches')->middleware(['auth:api'])->group(function () {
+    Route::get('/index', [App\Http\Controllers\Admin\BranchController::class, 'index'])->name('branches.index');
+    Route::get('/create', [App\Http\Controllers\Admin\BranchController::class, 'create'])->name('branches.create');
+    Route::post('/store', [App\Http\Controllers\Admin\BranchController::class, 'store'])->name('branches.store');
+    Route::get('/edit/{id}', [App\Http\Controllers\Admin\BranchController::class, 'edit'])->name('branches.edit');
+    Route::post('/update/{id}', [App\Http\Controllers\Admin\BranchController::class, 'update'])->name('branches.update');
+    Route::post('/destroy', [App\Http\Controllers\Admin\BranchController::class, 'destroy'])->name('branches.destroy');
+});
+
+// shifts
+Route::prefix('shifts')->middleware(['auth:api'])->group(function () {
+    Route::get('/index', [App\Http\Controllers\ShiftController::class, 'index'])->name('shifts.index');
+    Route::get('/create', [App\Http\Controllers\ShiftController::class, 'create'])->name('shifts.create');
+    Route::post('/store', [App\Http\Controllers\ShiftController::class, 'store'])->name('shifts.store');
+    Route::get('/edit/{id}', [App\Http\Controllers\ShiftController::class, 'edit'])->name('shifts.edit');
+    Route::post('/update/{id}', [App\Http\Controllers\ShiftController::class, 'update'])->name('shifts.update');
+    Route::post('/destroy', [App\Http\Controllers\ShiftController::class, 'destroy'])->name('shifts.destroy');
+});
+
+// Attendance
+Route::prefix('attendances')->middleware(['auth:api'])->group(function () {
+    Route::get('/index', [App\Http\Controllers\AttendanceController::class, 'index'])->name('attendances.index');
+    Route::get('/create', [App\Http\Controllers\AttendanceController::class, 'create'])->name('attendances.create');
+    Route::post('/store', [App\Http\Controllers\AttendanceController::class, 'store'])->name('attendances.store');
+    Route::get('/edit/{id}', [App\Http\Controllers\AttendanceController::class, 'edit'])->name('attendances.edit');
+    Route::post('/update/{id}', [App\Http\Controllers\AttendanceController::class, 'update'])->name('attendances.update');
+    Route::post('/destroy', [App\Http\Controllers\AttendanceController::class, 'destroy'])->name('attendances.destroy');
+});
+
+
+Route::middleware(['auth:api'])->get('/logs', function () {
+    $logs = Log::with('user:id,name') // Eager load the user relationship to get the user's name
+        ->orderBy('log_date', 'desc')
+        ->take(50)
+        ->get()
+        ->map(function ($log) {
+            $log->user_name = $log->user ? $log->user->name : null; // Add user_name attribute
+            return $log;
+        });
+
+    return response()->json([
+        'message' => 'logs index route',
+        'logs' => $logs
+    ]);
 });
