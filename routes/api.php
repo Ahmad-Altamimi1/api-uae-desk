@@ -25,24 +25,26 @@ Route::get('/test', function () {
 });
 
 Route::post('/login', [ahmad::class, 'login']);
+Route::post('/logout', [ahmad::class, 'logout'])->middleware(['auth:api']); 
+
 // Route::post('/login', [LoginController::class, 'login']);
-Route::middleware(['auth:api', 'permission:user-list'])->get('/user', function (Request $request) {
-    $user = $request->user();
-    $permissions = $user->getAllPermissions();
-    return response()->json(['user' => $user, 'permissions' => $permissions]);
-});
+// Route::middleware(['auth:api', 'permission:user-list'])->get('/user', function (Request $request) {
+//     $user = $request->user();
+//     $permissions = $user->getAllPermissions();
+//     return response()->json(['user' => $user, 'permissions' => $permissions]);
+// });
+Route::post('/customers/media/store', [App\Http\Controllers\Admin\CustomerController::class, 'storeMedia'])->middleware(['auth:api']); 
 // ->middleware(['auth:api', 'permission:user-list'])
 Route::prefix('customers')->middleware(['auth:api'])->group(function () {
     Route::get('/index', [App\Http\Controllers\Admin\CustomerController::class, 'index'])->name('customers.index');
     Route::get('/create', [App\Http\Controllers\Admin\CustomerController::class, 'create'])->name('customers.create');
     Route::post('/store', [App\Http\Controllers\Admin\CustomerController::class, 'store'])->name('customers.store');
     Route::get('/edit/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'edit'])->name('customers.edit');
-    Route::post('/update/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'update'])->name('customers.update');
+    Route::post('/update', [App\Http\Controllers\Admin\CustomerController::class, 'update'])->name('customers.update');
     Route::post('/destroy', [App\Http\Controllers\Admin\CustomerController::class, 'destroy'])->name('customers.destroy');
     Route::get('/view/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'show'])->name('customers.show');
     Route::get('accountStatement/view/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'accountStatement'])->name('customers.account-statement');
     Route::post('/importcustomers', [App\Http\Controllers\Admin\CustomerController::class, 'importCustomers'])->name('customers.import');
-    Route::post('/media/store/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'storeMedia'])->name('customers.media.store'); // Store Media
     Route::post('/upload/fta-docuemnt/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'storeFtaMedia'])->name('customers.upload.fta_document');
     Route::match(['post', 'put'], '/update/fta-docuemnt/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'updateFtaDocument'])->name('customers.updateFtaDocument');
     Route::get('/media/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'media'])->name('customers.media'); // Media Upload Route
@@ -78,7 +80,7 @@ Route::prefix('permissions')->middleware(['auth:api'])->group(function () {
     Route::post('/destroy', [App\Http\Controllers\Admin\PermissionController::class, 'destroy'])->name('permissions.destroy');
 });
 
-// Services
+// Service
 Route::prefix('services')->middleware(['auth:api'])->group(function () {
     Route::get('/index', [App\Http\Controllers\Admin\ServiceController::class, 'index'])->name('services.index');
     Route::get('/create', [App\Http\Controllers\Admin\ServiceController::class, 'create'])->name('services.create');
@@ -90,6 +92,7 @@ Route::prefix('services')->middleware(['auth:api'])->group(function () {
 
 
 // Branches
+
 Route::prefix('branches')->middleware(['auth:api'])->group(function () {
     Route::get('/index', [App\Http\Controllers\Admin\BranchController::class, 'index'])->name('branches.index');
     Route::get('/create', [App\Http\Controllers\Admin\BranchController::class, 'create'])->name('branches.create');
@@ -135,3 +138,4 @@ Route::middleware(['auth:api'])->get('/logs', function () {
         'logs' => $logs
     ]);
 });
+

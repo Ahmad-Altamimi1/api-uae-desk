@@ -29,7 +29,8 @@ use App\Models\Entry as ModelsEntry;
 use App\Models\Transaction;
 use Stripe\Stripe;
 use Stripe\Checkout\Session;
-
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 class CustomerController extends Controller
 {
     function __construct()
@@ -109,15 +110,17 @@ class CustomerController extends Controller
         return view('admin.customers.create', compact('services', 'settings', 'branches'));
     }
 
+    
 
     public function store(Request $request)
     {
-
-        $validated = $request->validate([
-            'service_id' => 'required|array',  // Ensure it's an array
-            'service_id.*' => 'exists:services,id', // Validate each selected service ID
-            'service_price' => 'required|array',
-            'service_price.*' => 'numeric|min:0',
+     
+        
+        $validator = Validator::make($request->all(), [
+            'service_id' => 'required|array',  
+            'service_id.*' => 'exists:services,id',
+            // 'service_price' => 'required|array',
+            // 'service_price.*' => 'numeric|min:0',
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'business_name' => 'required|string|max:255',
@@ -125,7 +128,7 @@ class CustomerController extends Controller
             'second_number' => 'nullable|string|max:15',
             'email' => 'required|email',
             'address' => 'nullable',
-            'status' => 'nullable|boolean',
+            'status' => 'nullable|numeric',
             'tax_id' => 'nullable',
             'price' => 'required|numeric',
             'vat_value' => 'nullable',
@@ -137,12 +140,21 @@ class CustomerController extends Controller
             'payment_method' => 'nullable|string',
             'gmail_user_name' => 'nullable',
             'gmail_password' => 'nullable',
-            'entries' => '',
-
-            // 'entries.*.date' => 'required|date',
-            // 'entries.*.amount' => 'required|integer|min:0',
+            'entries' => 'nullable|array', // Add a rule if needed
         ]);
-        $validated['payment_method'] = null;
+        
+        if ($validator->fails()) {
+            throw new HttpResponseException(response()->json([
+                'errors' => $validator->errors()
+            ], 422));
+        }
+        
+        $validated = $validator->validated();
+        
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        } 	
         if ($validated['payment_method'] === 'stripe') {
             $validated['transaction_refrence_number'] = null;
         }
@@ -165,7 +177,7 @@ class CustomerController extends Controller
         }
         $servicesWithPrices = [];
         foreach ($request->service_id as $serviceId) {
-            $servicesWithPrices[$serviceId] = ['price' => $request->service_price[$serviceId] ?? 0];
+            $servicesWithPrices[$serviceId] = ['price' =>  0, 'created_at' => now(), 'updated_at' => now()];
         }
         $customer->services()->attach($servicesWithPrices);
         // ✅ If payment method is Stripe, generate a payment link
@@ -223,8 +235,7 @@ class CustomerController extends Controller
             return auth()->user()->hasRole('supervisor') || auth()->user()->hasRole("Admin") || auth()->user()->hasRole('Super Admin') ? redirect()->route('branches.allBranchesData') : redirect()->route('customers.index');
         }
 
-        Toastr::success(__('Customer added successfully.'));
-        return redirect()->route('customers.index');
+        return response()->json(['message' => 'Customer added successfully.',"id"=>$customer->id], 201);
     }
 
     public function edit($id)
@@ -237,30 +248,43 @@ class CustomerController extends Controller
             $entries = $customer->entries;
             // Retrieve selected service IDs and their prices for the customer
             $selectedServices = $customer->services()->pluck('services.id')->toArray();
-            // dd($selectedServices);
             $selectedServicePrices = $customer->services()->pluck('customer_services.price', 'services.id')->toArray();
 
-            return view('admin.customers.edit', compact('customer', 'services', 'branches', 'settings', 'selectedServices', 'selectedServicePrices', "entries"));
+            return response()->json([
+                'status' => true,
+                'data' => [
+                    'customer' => $customer,
+                    'services' => $services,
+                    'branches' => $branches,
+                    'settings' => $settings,
+                    'selectedServices' => $selectedServices,
+                    'selectedServicePrices' => $selectedServicePrices,
+                    "entries" => $entries,
+                ]
+            ]);
         } catch (\Exception $e) {
-            Toastr::error(__('Customer not found.'));
-            return redirect()->route('customers.index');
+            return response()->json([
+                'status' => false,
+                'message' => __('Customer not found.')
+            ], 404);
         }
     }
 
 
 
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-
+      
         try {
+              $id = $request->id;
             // Find the customer by ID
             $customer = Customer::findOrFail($id);
             // Validate incoming request data
-            $validated = $request->validate([
-                'service_id' => 'required|array',
+            $validator = Validator::make($request->all(), [
+                'service_id' => 'required|array',  
                 'service_id.*' => 'exists:services,id',
-                'service_price' => 'required|array',
-                'service_price.*' => 'numeric|min:0',
+                // 'service_price' => 'required|array',
+                // 'service_price.*' => 'numeric|min:0',
                 'first_name' => 'required|string|max:255',
                 'last_name' => 'required|string|max:255',
                 'business_name' => 'required|string|max:255',
@@ -268,22 +292,33 @@ class CustomerController extends Controller
                 'second_number' => 'nullable|string|max:15',
                 'email' => 'required|email',
                 'address' => 'nullable',
-                'status' => 'nullable|boolean',
-                'price' => 'nullable',
+                'status' => 'nullable|numeric',
+                'tax_id' => 'nullable',
+                'price' => 'required|numeric',
                 'vat_value' => 'nullable',
                 'branch_id' => 'required|exists:branches,id',
                 'transaction_refrence_number' => 'nullable',
                 'fta_refrence' => 'nullable',
                 'fta_password' => 'nullable',
                 'fta_user_name' => 'nullable',
-                'payment_method' => 'nullable',
+                'payment_method' => 'nullable|string',
                 'gmail_user_name' => 'nullable',
                 'gmail_password' => 'nullable',
-                'tax_id' => 'nullable',
-                'entries' => '',
-                // 'entries.*.date' => 'required|date',
-                // 'entries.*.amount' => 'required|numeric|min:0',
+                'entries' => 'nullable|array', // Add a rule if needed
             ]);
+            
+            if ($validator->fails()) {
+                throw new HttpResponseException(response()->json([
+                    'errors' => $validator->errors()
+                ], 422));
+            }
+            
+            $validated = $validator->validated();
+            
+    
+            if ($validator->fails()) {
+                return response()->json(['errors' => $validator->errors()], 422);
+            } 	
             $existingEntries = ModelsEntry::where('customer_id', $customer->id)->pluck('id')->toArray();
             if (auth()->user()->hasRole('supervisor')) {
                 $validated['updated_by'] = auth()->id();
@@ -321,16 +356,7 @@ class CustomerController extends Controller
                 ->whereNotIn('id', $newEntryIds)
                 ->delete();
 
-            // Remove 'price' from validated data if the user is not an Admin or Super Admin
-            // Prevent non-admins from updating the price
-            // if (!auth()->user()->hasRole('Admin') && !auth()->user()->hasRole('Super Admin')) {
-            //     if (array_key_exists('price', $validated)) {
-            //         unset($validated['price']);
-            //     }
-            // }
-
-            // Ensure only Admin or Super Admin can update service prices
-            // if (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin')) {
+           
             $servicesWithPrices = [];
             foreach ($request->service_id as $serviceId) {
                 $servicesWithPrices[$serviceId] = ['price' => $request->service_price[$serviceId] ?? 0];
@@ -344,34 +370,29 @@ class CustomerController extends Controller
 
 
             // Success message
-            Toastr::success(__('Customer updated successfully.'));
-            return auth()->user()->hasRole('supervisor') || auth()->user()->hasRole("Admin") || auth()->user()->hasRole('Super Admin') ? redirect()->route('branches.allBranchesData') : redirect()->route('customers.index');
+            return response()->json(['message' => __('Customer updated successfully.')], 200);
         } catch (ValidationException $e) {
             // Catch validation errors specifically
-            Log::error('Validation error updating customer: ', [
-                'errors' => $e->errors(),  // Get the validation errors
-                'user_id' => auth()->id(),
-                'customer_id' => $id,  // Log the customer ID for context
-            ]);
+            // Log::error('Validation error updating customer: ', [
+            //     'errors' => $e->errors(),  // Get the validation errors
+            //     'user_id' => auth()->id(),
+            //     'customer_id' => $id,  // Log the customer ID for context
+            // ]);
 
             // Display validation errors to the user
-            Toastr::error(__('The provided data is invalid.'));
-
-            // Redirect back with the validation errors
-            return redirect()->back()->withErrors($e->errors())->withInput();
+            return response()->json(['message' => __('The provided data is invalid.'), 'errors' => $e->errors()], 422);
         } catch (\Exception $e) {
 
-            // Log any other exception
-            Log::error('Error updating customer: ', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'user_id' => auth()->id(),
-                'customer_id' => $id,
-            ]);
+            // // Log any other exception
+            // Log::error('Error updating customer: ', [
+            //     'message' => $e->getMessage(),
+            //     'trace' => $e->getTraceAsString(),
+            //     'user_id' => auth()->id(),
+            //     'customer_id' => $id,
+            // ]);
 
             // Display a general error message
-            Toastr::error(__('Error updating customer.'));
-            return redirect()->back();
+            return response()->json(['message' => __('Error updating customer.')], 500);
         }
     }
 
@@ -398,16 +419,23 @@ class CustomerController extends Controller
     public function show($id)
     {
         $customer = Customer::findOrFail($id);
-        // Check if the user is an expert and the customer status is not 1
-        if (!(Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Super Admin') || !(Auth::user()->hasRole('Supervisor')))) {
-            abort(404, __('Customer not found or access denied.'));
+        // Check if the user has the appropriate role
+        if (!(Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Supervisor'))) {
+            return response()->json(['error' => __('Customer not found or access denied.')], 404);
         }
 
         $entries = $customer->entries;
         $employees = User::role('operator')->get();
         $customerDetails = $customer->document_details ? json_decode($customer->document_details, true) : [];
         $getProcessTime = $this->getProcessTime($customer->id);
-        return view('admin.customers.show', compact('customer', 'customerDetails', 'getProcessTime', 'entries', "employees"));
+        
+        return response()->json([
+            'customer' => $customer,
+            'customerDetails' => $customerDetails,
+            'getProcessTime' => $getProcessTime,
+            'entries' => $entries,
+            'employees' => $employees
+        ]);
     }
 
 
@@ -416,35 +444,49 @@ class CustomerController extends Controller
         $customer = Customer::findOrFail($id); // Retrieve customer by ID
         return view('admin.customers.media', compact('customer'));
     }
-    public function storeMedia(Request $request, $id)
+    public function storeMedia(Request $request)
     {
-        $validated = $request->validate([
-            'document_name' => 'required|string|max:255',
-            'media' => 'required|array',
-            'media.*' => 'file|mimes:webp,jpg,jpeg,png,pdf,doc,docx,xls,xlsx,txt,csv|max:5120',
-        ]);
-
-        $customer = Customer::findOrFail($id);
+        Log::info('Received request to store media.', ['request' => $request->all()]);
 
         try {
-            foreach ($request->file('media') as $file) {
-                $fileName = $file->getClientOriginalName();
-                $path = $file->store('uploads/customers/' . $customer->id, 'public');
-
-                CustomerMedia::create([
-                    'customer_id' => $customer->id,
-                    'document_name' => $request->document_name ?: $fileName,
-                    'file_path' => $path,
-                ]);
+            $request->validate([
+                'id' => 'required|exists:customers,id',
+                'document_name' => 'required|string|max:255',
+                'media.*' => 'file|mimes:webp,jpg,jpeg,png,pdf,doc,docx,xls,xlsx,txt,csv|max:5120',
+            ]);
+        } catch (ValidationException $e) {
+            Log::error('Validation error while storing media.', ['errors' => $e->errors()]);
+            return response()->json(['message' => __('The provided data is invalid.'), 'errors' => $e->errors()], 422);
+        }
+    
+        $customer = Customer::findOrFail($request->input('id'));
+    
+        try {
+            if ($request->hasFile('media')) {
+                foreach ($request->file('media') as $file) {
+                    $fileName = $file->getClientOriginalName();
+                    $path = $file->store('uploads/customers/' . $customer->id, 'public');
+    
+                    CustomerMedia::create([
+                        'customer_id' => $customer->id,
+                        'document_name' => $request->input('document_name') ?: $fileName,
+                        'file_path' => $path,
+                    ]);
+                }
             }
-
-            Toastr::success(__('Media uploaded successfully.'));
-            return redirect()->route('customers.media', $id);
+    
+            Log::info('Media uploaded successfully for customer.', ['customer_id' => $customer->id]);
+            return response()->json(['success' => true, 'message' => __('Media uploaded successfully.')]);
         } catch (\Exception $e) {
-            Toastr::error(__('Error uploading media.'));
-            return redirect()->back();
+            Log::error('Error uploading media.', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => __('Error uploading media.'),
+                'error' => $e->getMessage(), // optional for debugging
+            ], 500);
         }
     }
+    
 
     public function deleteMedia($id)
     {

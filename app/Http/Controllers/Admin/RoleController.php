@@ -91,6 +91,7 @@ class RoleController extends Controller
 			'name' 					=> 'required|unique:roles,name',
 			'code' 					=> 'required|unique:roles,code',
 			'permission' 			=> 'required',
+
 		];
 
 		$messages = [
@@ -127,7 +128,7 @@ class RoleController extends Controller
 		// $role->syncPermissions($request->input('permission'));
 
 		// Toastr::success(__('role.message.store.success'));
-		// return redirect()->route('roles.index');
+
 
 	}
 

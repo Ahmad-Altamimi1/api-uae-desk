@@ -34,6 +34,7 @@ class BranchController extends Controller
             'message' => 'Branches fetched successfully',
             'data' => $branches
         ]);
+
     }
     
 

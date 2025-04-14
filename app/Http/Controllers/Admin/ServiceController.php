@@ -12,11 +12,11 @@ class ServiceController extends Controller
 {
     function __construct()
     {
-        $this->middleware('auth');
-        $this->middleware('permission:services-list', ['only' => ['index', 'store']]);
-        $this->middleware('permission:services-create', ['only' => ['create', 'store']]);
-        $this->middleware('permission:services-edit', ['only' => ['edit', 'update']]);
-        $this->middleware('permission:services-delete', ['only' => ['destroy']]);
+        // $this->middleware('auth');
+        // $this->middleware('permission:services-list', ['only' => ['index', 'store']]);
+        // $this->middleware('permission:services-create', ['only' => ['create', 'store']]);
+        // $this->middleware('permission:services-edit', ['only' => ['edit', 'update']]);
+        // $this->middleware('permission:services-delete', ['only' => ['destroy']]);
     }
 
     public function index(Request $request)
@@ -30,6 +30,10 @@ class ServiceController extends Controller
         ]);
     }
     
+
+    }
+   
+
     public function create()
     {
         return view('admin.services.create');
