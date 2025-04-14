@@ -12,39 +12,21 @@ class ServiceController extends Controller
 {
     function __construct()
     {
-        $this->middleware('auth');
-        $this->middleware('permission:services-list', ['only' => ['index', 'store']]);
-        $this->middleware('permission:services-create', ['only' => ['create', 'store']]);
-        $this->middleware('permission:services-edit', ['only' => ['edit', 'update']]);
-        $this->middleware('permission:services-delete', ['only' => ['destroy']]);
+        // $this->middleware('auth');
+        // $this->middleware('permission:services-list', ['only' => ['index', 'store']]);
+        // $this->middleware('permission:services-create', ['only' => ['create', 'store']]);
+        // $this->middleware('permission:services-edit', ['only' => ['edit', 'update']]);
+        // $this->middleware('permission:services-delete', ['only' => ['destroy']]);
     }
 
     public function index(Request $request)
     {
-        if ($request->ajax()) {
             $data = Service::all();
 
-            return Datatables::of($data)
-                ->addIndexColumn()
-                ->addColumn('action', function ($row) {
-                    $edit = Gate::check('services-edit') ? 
-                        '<a href="'.route('services.edit', $row->id).'" class="custom-edit-btn mr-1">
-                            <i class="fe fe-pencil"></i> '.__('Edit').'
-                         </a>' : '';
-
-                    $delete = Gate::check('services-delete') ? 
-                        '<button class="custom-delete-btn remove-service" data-id="'.$row->id.'" data-action="'.route('services.destroy', $row->id).'">
-                            <i class="fe fe-trash"></i> '.__('Delete').'
-                         </button>' : '';
-
-                    return $edit . ' ' . $delete;
-                })
-                ->escapeColumns([])
-                ->make(true);
-        }
-
-        return view('admin.services.index');
+      
+        return response()->json($data);
     }
+   
 
     public function create()
     {

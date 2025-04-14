@@ -98,7 +98,11 @@ class RoleController extends Controller
             'permission.required'   => __('default.form.validation.permission.required'),
         ];
         
-        $this->validate($request, $rules, $messages);
+        $validator = Validator::make($request->all(), $rules, $messages);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        } 	
        
 		try {
             $role = Role::create([

@@ -27,43 +27,10 @@ class BranchController extends Controller
     }
     public function index(Request $request)
     {
-        if ($request->ajax()) {
             $data = Branch::with('location')->get();
 
-            return Datatables::of($data)
-                ->addIndexColumn()
-                ->addColumn('location', function ($row) {
-                    return $row->location ? $row->location->name : __('N/A'); // Show location name or 'N/A' if not available
-                })
-                ->addColumn('action', function ($row) {
-                    // Edit button
-                    $edit = Gate::check('branches-edit') ?
-                        '<a href="' . route('branches.edit', $row->id) . '" class="custom-edit-btn mr-1">
-                            <i class="fe fe-pencil"></i> ' . __('Edit') . '
-                         </a>' : '';
-
-                    // Delete button
-                    $delete = Gate::check('branches-delete') ?
-                        '<button class="custom-delete-btn remove-branch" data-id="' . $row->id . '" data-action="' . route('branches.destroy', $row->id) . '">
-                            <i class="fe fe-trash"></i> ' . __('Delete') . '
-                         </button>' : '';
-
-                    return $edit . ' ' . $delete;
-                })
-                ->addColumn('status', function ($row) {
-                    $current_status = $row->status ? 'Checked' : '';
-                    return "
-                        <input type='checkbox' id='status_$row->id' class='check' onclick='changeBranchStatus(event.target, $row->id);' " . $current_status . ">
-                        <label for='status_$row->id' class='checktoggle'>checkbox</label>
-                    ";
-                })
-                ->editColumn('created_at', '{{date("jS M Y", strtotime($created_at))}}')
-                ->editColumn('updated_at', '{{date("jS M Y", strtotime($updated_at))}}')
-                ->escapeColumns([])
-                ->make(true);
-        }
-
-        return view('admin.branches.index');
+        
+        return response()->json($data);
     }
 
     public function create()
