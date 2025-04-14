@@ -36,7 +36,8 @@ class LoginController extends Controller
      *             @OA\Property(property="email", type="string", format="email", example="user@example.com"),
      *             @OA\Property(property="password", type="string", format="password", example="secret123"),
      *             @OA\Property(property="latitude", type="number", format="float", example="51.5074"),
-     *             @OA\Property(property="longitude", type="number", format="float", example="0.1278"),
+     *             @OA\Property
+     * (property="longitude", type="number", format="float", example="0.1278"),
      *             @OA\Property(property="remember", type="string", example="on")
      *         )
      *     ),

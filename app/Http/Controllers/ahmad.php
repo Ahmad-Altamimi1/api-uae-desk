@@ -46,4 +46,32 @@ class ahmad extends Controller
             'message' => 'Invalid login credentials.',
         ], 401);
     }
+
+    public function logout(Request $request)
+    {
+        
+       
+            // Check if the user is authenticated
+            if (!auth()->check()) {
+                // Log unauthenticated logout attempt (error level)
+                Log::error('Unauthenticated user attempted to logout', [
+                    'ip' => $request->ip()
+                ]);
+    
+                return response()->json(['message' => 'Unauthenticated.'], 401);
+            }
+    
+            // Revoke the user's token
+            $request->user()->token()->revoke();
+    
+            // Log successful logout attempt (info level)
+            Log::info('User logged out successfully', [
+                'user_id' => $request->user()->id,
+                'ip' => $request->ip()
+            ]);
+    
+            return response()->json([
+                'message' => 'User logged out successfully!'
+            ], 200);
+        }
 }
