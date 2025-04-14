@@ -31,8 +31,8 @@ class ServiceController extends Controller
     }
     
 
-    }
-   
+    
+
 
     public function create()
     {
@@ -94,15 +94,21 @@ class ServiceController extends Controller
 
     public function destroy(Request $request)
     {
-        $service = Service::findOrFail($request->id);
-
         try {
+            $service = Service::findOrFail($request->id);
             $service->delete();
-            Toastr::success(__('Service deleted successfully.'));
-            return redirect()->route('services.index');
+    
+            return response()->json([
+                'success' => true,
+                'message' => 'Service deleted successfully.'
+            ], 200);
         } catch (\Exception $e) {
-            Toastr::error(__('Error deleting service.'));
-            return redirect()->back();
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting service.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+    
 }

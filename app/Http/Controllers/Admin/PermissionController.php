@@ -144,18 +144,36 @@ class PermissionController extends Controller
 		}
 	}
 
-	public function destroy()
-	{
-		$id = request()->input('id');
-		try {
-			Permission::find($id)->delete();
-			return redirect()->route('permissions.index')->with(Toastr::error(__('permission.message.destroy.success')));
+	
 
-		} catch (Exception $e) {
-			$error_msg = Toastr::error(__('permission.message.destroy.error'));
-			return redirect()->route('permissions.index')->with($error_msg);
-		}
-	}
+public function destroy(Request $request)
+{
+    $id = $request->input('id');
+
+    try {
+        $permission = Permission::find($id);
+
+        if (!$permission) {
+            return response()->json([
+                'success' => false,
+                'message' => __('permission.message.not_found'),
+            ], 404);
+        }
+
+        $permission->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => __('permission.message.destroy.success'),
+        ]);
+    } catch (Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => __('permission.message.destroy.error'),
+        ], 500);
+    }
+}
+
 
 	public function groupPermission()
 	{

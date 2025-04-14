@@ -123,19 +123,25 @@ class BranchController extends Controller
         }
     }
 
+ 
     public function destroy(Request $request)
     {
-        $branch = Branch::findOrFail($request->id); // Retrieve the branch by ID
-
         try {
+            $branch = Branch::findOrFail($request->id);
             $branch->delete();
-            Toastr::success(__('Branch deleted successfully.'));
-            return redirect()->route('branches.index');
+    
+            return response()->json([
+                'success' => true,
+                'message' => __('Branch deleted successfully.'),
+            ]);
         } catch (\Exception $e) {
-            Toastr::error(__('Error deleting branch.'));
-            return redirect()->back();
+            return response()->json([
+                'success' => false,
+                'message' => __('Error deleting branch.'),
+            ], 500);
         }
     }
+    
 
     // public function allBranchesData(Request $request)
     // {
