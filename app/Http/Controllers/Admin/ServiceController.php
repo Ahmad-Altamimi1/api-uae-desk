@@ -21,10 +21,16 @@ class ServiceController extends Controller
 
     public function index(Request $request)
     {
-            $data = Service::all();
+        $services = Service::all();
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Services fetched successfully',
+            'data' => $services
+        ]);
+    }
+    
 
-      
-        return response()->json($data);
     }
    
 

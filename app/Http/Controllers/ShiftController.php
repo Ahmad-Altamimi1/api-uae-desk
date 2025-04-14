@@ -12,40 +12,15 @@ class ShiftController extends Controller
 {
     public function index(Request $request)
     {
-        if ($request->ajax()) {
-            $data = Shift::latest()->get();
-            return DataTables::of($data)
-                ->addIndexColumn()
-                ->addColumn('start_time', function ($row) {
-                    return $row->start_time; // format if needed
-                })
-                ->addColumn('end_time', function ($row) {
-                    return $row->end_time;
-                })
-                ->addColumn('is_active', function ($row) {
-                    return $row->is_active
-                        ? '<span class="badge badge-success">Active</span>'
-                        : '<span class="badge badge-danger">Inactive</span>';
-                })
-                ->addColumn('action', function ($row) {
-                    $btn = '';
-
-                    if (Gate::check('shifts-edit') || auth()->user()->hasRole('Super Admin')) {
-                        $btn .= '<a href="' . route('shifts.edit', $row->id) . '" class="btn btn-sm btn-primary">Edit</a> ';
-                    }
-
-                    if (Gate::check('shifts-delete') || auth()->user()->hasRole('Super Admin')) {
-                        $btn .= '<button type="button" data-id="' . $row->id . '" data-action="' . route('shifts.destroy', $row->id) . '" class="btn btn-sm btn-danger remove-shift">Delete</button>';
-                    }
-
-                    return $btn;
-                })
-                ->rawColumns(['is_active', 'action'])
-                ->make(true);
-        }
-
-        return view('admin.shifts.index');
+        $shifts = Shift::latest()->get();
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Shifts fetched successfully',
+            'data' => $shifts,
+        ]);
     }
+    
 
     public function show($id)
     {

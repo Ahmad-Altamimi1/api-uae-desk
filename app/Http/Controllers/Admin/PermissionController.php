@@ -3,11 +3,12 @@
 namespace App\Http\Controllers\Admin;
 
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
-use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Gate;
+use App\Http\Controllers\Controller;
 use Brian2694\Toastr\Facades\Toastr;
+use Illuminate\Support\Facades\Gate;
+use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\Validator;
 
 class PermissionController extends Controller
 {
@@ -91,17 +92,23 @@ class PermissionController extends Controller
 			'name.unique' => __('default.form.validation.name.unique'),
 		];
 
-		$this->validate($request, $rules, $messages);
+		$validator = Validator::make($request->all(), $rules, $messages);
 
-		try {
-			$permissions = Permission::create(['name' => $request->input('name')]);
-
-			Toastr::success(__('permission.message.store.success'));
-			return redirect()->route('permissions.create');
-		} catch (Exception $e) {
-			Toastr::error(__('permission.message.store.error'));
-			return redirect()->route('permissions.create');
+		if ($validator->fails()) {
+			return response()->json([
+				'status' => 'error',
+				'message' => $validator->errors()->first(),
+			], 422);
 		}
+
+		$permissions = Permission::create(['name' => $request->input('name')]);
+
+		Toastr::success(__('permission.message.store.success'));
+		return response()->json([
+			"data" => $permissions->id,
+			'status' => 'success',
+			'message' => __('permission.message.store.success'),
+		]);
 	}
 
 	public function edit($id)

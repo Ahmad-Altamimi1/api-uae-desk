@@ -27,11 +27,16 @@ class BranchController extends Controller
     }
     public function index(Request $request)
     {
-            $data = Branch::with('location')->get();
+        $branches = Branch::with('location')->get();
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Branches fetched successfully',
+            'data' => $branches
+        ]);
 
-        
-        return response()->json($data);
     }
+    
 
     public function create()
     {
