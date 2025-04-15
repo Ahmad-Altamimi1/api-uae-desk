@@ -31,7 +31,7 @@ class BranchController extends Controller
     
         return response()->json([
             'success' => true,
-            'message' => 'Branches fetched successfully',
+            'message' => 'Branches Added successfully',
             'data' => $branches
         ]);
 
@@ -41,8 +41,14 @@ class BranchController extends Controller
     public function create()
     {
         $locations = Location::all();
-        return view('admin.branches.create', compact('locations'));
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Locations Added successfully',
+            'data' => $locations
+        ]);
     }
+    
 
     public function store(Request $request)
     {
@@ -66,17 +72,32 @@ class BranchController extends Controller
             'longitude.required' => __('longitude is required.'),
         ];
 
-        $this->validate($request, $rules, $messages);
+        try {
+            $this->validate($request, $rules, $messages);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => __('Validation errors occurred.'),
+                'errors' => $e->errors(),
+            ], 422);
+        }
 
         $input = $request->all();
 
         try {
-            Branch::create($input);
-            Toastr::success(__('Branch created successfully.'));
-            return redirect()->route('branches.index');
+            $branch = Branch::create($input);
+            return response()->json([
+            'success' => true,
+            'message' => __('Branch created successfully.'),
+            'data' => $branch
+            ]);
+
         } catch (\Exception $e) {
-            Toastr::error(__('Error creating branch.'));
-            return redirect()->back();
+            return response()->json([
+            'success' => false,
+            'message' => __('Error creating branch.'),
+            'error' => $e->getMessage()
+            ], 500);
         }
     }
 

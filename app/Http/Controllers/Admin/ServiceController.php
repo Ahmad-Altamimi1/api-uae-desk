@@ -25,7 +25,7 @@ class ServiceController extends Controller
     
         return response()->json([
             'success' => true,
-            'message' => 'Services fetched successfully',
+            'message' => 'Services Added successfully',
             'data' => $services
         ]);
     }

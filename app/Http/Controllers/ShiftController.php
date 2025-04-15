@@ -16,7 +16,7 @@ class ShiftController extends Controller
     
         return response()->json([
             'success' => true,
-            'message' => 'Shifts fetched successfully',
+            'message' => 'Shifts Added successfully',
             'data' => $shifts,
         ]);
     }
@@ -75,9 +75,24 @@ class ShiftController extends Controller
         return redirect()->route('shifts.index')->with('success', 'Shift updated successfully!');
     }
 
-    public function destroy(Shift $shift)
+  
+    public function destroy(Request $request)
     {
-        $shift->delete();
-        return redirect()->route('shifts.index')->with('success', 'Shift deleted successfully!');
+        try {
+            $shift = Shift::findOrFail($request->id);
+            $shift->delete();
+    
+            return response()->json([
+                'success' => true,
+                'message' => 'shift deleted successfully.'
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting shift.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
+    
 }
