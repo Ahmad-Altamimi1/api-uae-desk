@@ -174,24 +174,42 @@ class RoleController extends Controller
 		}
 	}
 
-	public function destroy()
+
+	public function destroy(Request $request)
 	{
 		$id = request()->input('id');
 		$allrole = Role::all();
 		$countallrole = $allrole->count();
-
+	
 		if ($countallrole <= 1) {
-			Toastr::error(__('role.message.warning_last_role'));
-			return redirect()->route('users.index');
-		} else {
-			$getrole = Role::find($id);
-			try {
-				Role::find($id)->delete();
-				return back()->with(Toastr::error(__('role.message.destroy.success')));
-			} catch (Exception $e) {
-				$error_msg = Toastr::error(__('user.message.destroy.error'));
-				return redirect()->route('roles.index')->with($error_msg);
-			}
+			return response()->json([
+				'success' => false,
+				'message' => __('role.message.warning_last_role'),
+			], 400); 
+		}
+	
+		$getrole = Role::find($id);
+	
+		if (!$getrole) {
+			return response()->json([
+				'success' => false,
+				'message' => __('role.message.not_found'),
+			], 404);
+		}
+	
+		try {
+			$getrole->delete();
+	
+			return response()->json([
+				'success' => true,
+				'message' => __('role.message.destroy.success'),
+			]);
+		} catch (\Exception $e) {
+			return response()->json([
+				'success' => false,
+				'message' => __('user.message.destroy.error'),
+			], 500);
 		}
 	}
+	
 }
