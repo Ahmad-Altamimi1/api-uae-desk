@@ -53,7 +53,7 @@ class Customer extends Model
 
     public function media()
     {
-        return $this->hasMany(CustomerMedia::class);
+        return $this->hasMany(CustomerMedia::class)->selectRaw('*, (CASE WHEN file_path LIKE \'%.pdf\' THEN \'pdf\' WHEN file_path LIKE \'%.docx\' THEN \'docx\' WHEN file_path LIKE \'%.jpg\' THEN \'jpg\' WHEN file_path LIKE \'%.png\' THEN \'png\' WHEN file_path LIKE \'%.txt\' THEN \'txt\' WHEN file_path LIKE \'%.csv\' THEN \'csv\' ELSE \'unknown\' END) as file_type');
     }
 
     public function creator()
@@ -76,25 +76,46 @@ class Customer extends Model
         return $this->hasMany(CustomerFtaMedia::class);
     }
 
-    public function getDataEntryTimeAttribute()
-    {
-        return $this->submitted_for_verification_at
-            ? Carbon::parse($this->created_at)->diffInMinutes($this->submitted_for_verification_at)
-            : null;
-    }
+public function getDataEntryTimeAttribute()
+{
+    $start = Carbon::parse($this->created_at);
+    $end = $this->submitted_for_verification_at 
+        ? Carbon::parse($this->submitted_for_verification_at)
+        : null;
+
+    return [
+        'start' => $start,
+        'end' => $end,
+        'total' => $end ? $start->diffInMinutes($end) : null,
+    ];
+}
+
 
     public function getExpertVerificationTimeAttribute()
     {
-        return $this->expert_submitted_at
-            ? Carbon::parse($this->submitted_for_verification_at)->diffInMinutes($this->expert_submitted_at)
-            : null;
+        $start =$this->submitted_for_verification_at ? Carbon::parse($this->submitted_for_verification_at):null;
+        $end= $this->expert_submitted_at 
+        ? Carbon::parse($this->expert_submitted_at)
+        : null;
+        return 
+            [
+                'start' => $start,
+                'end' =>$end,
+                'total' =>  $end ? $start->diffInMinutes($end) : null
+            ];
     }
 
     public function getSupervisorApprovalTimeAttribute()
     {
-        return $this->supervisor_approved_at
-            ? Carbon::parse($this->expert_submitted_at)->diffInMinutes($this->supervisor_approved_at)
-            : null;
+           $start =$this->expert_submitted_at? Carbon::parse($this->expert_submitted_at):null;
+        $end= $this->supervisor_approved_at 
+        ? Carbon::parse($this->supervisor_approved_at)
+        : null;
+        return [
+            'start' => $start,
+            'end' =>$end,
+            'total' =>  $end ? $start->diffInMinutes($end) : null
+        ];
     }
 
     public function getTotalVerificationTimeAttribute()
