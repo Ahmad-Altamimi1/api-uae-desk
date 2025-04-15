@@ -31,7 +31,6 @@ class ServiceController extends Controller
     }
     
 
-    }
    
 
     public function create()

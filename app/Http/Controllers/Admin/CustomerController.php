@@ -243,7 +243,7 @@ class CustomerController extends Controller
         try {
             $customer = Customer::findOrFail($id);
             $services = Service::all();
-            $settings = Setting::first(); // Assuming settings is a single record table
+            $settings = Setting::first(); 
             $branches = Branch::all();
             $entries = $customer->entries;
             // Retrieve selected service IDs and their prices for the customer
@@ -418,12 +418,14 @@ class CustomerController extends Controller
 
     public function show($id)
     {
-        $customer = Customer::findOrFail($id);
+        
+        $customer = Customer::with(['branch', 'services', 'entries', 'media'])->findOrFail($id);
         // Check if the user has the appropriate role
         if (!(Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Supervisor'))) {
             return response()->json(['error' => __('Customer not found or access denied.')], 404);
         }
-
+        
+        $selectedServices = $customer->services()->pluck('services.id')->toArray();
         $entries = $customer->entries;
         $employees = User::role('operator')->get();
         $customerDetails = $customer->document_details ? json_decode($customer->document_details, true) : [];
@@ -432,13 +434,14 @@ class CustomerController extends Controller
         return response()->json([
             'customer' => $customer,
             'customerDetails' => $customerDetails,
-            'getProcessTime' => $getProcessTime,
+            'processTime' => $getProcessTime,
             'entries' => $entries,
+            'selectedServices' => $selectedServices,
             'employees' => $employees
         ]);
     }
 
-
+    
     public function media($id)
     {
         $customer = Customer::findOrFail($id); // Retrieve customer by ID
@@ -488,9 +491,12 @@ class CustomerController extends Controller
     }
     
 
-    public function deleteMedia($id)
+    public function deleteMedia(Request $request)
     {
+        $id = $request->id;
         $media = CustomerMedia::findOrFail($id);
+
+        Log::info('Received request to delete media.', ['media_id' => $id]);
 
         try {
             // Delete file from storage
@@ -499,11 +505,13 @@ class CustomerController extends Controller
             // Delete record from the database
             $media->delete();
 
-            Toastr::success(__('Media deleted successfully.'));
-            return redirect()->back();
+            Log::info('Media deleted successfully.', ['media_id' => $id]);
+
+            return response()->json(['success' => true, 'message' => __('Media deleted successfully.')]);
         } catch (\Exception $e) {
-            Toastr::error(__('Error deleting media.'));
-            return redirect()->back();
+            Log::error('Error deleting media.', ['error' => $e->getMessage(), 'media_id' => $id]);
+
+            return response()->json(['success' => false, 'message' => __('Error deleting media.')], 500);
         }
     }
 
@@ -666,7 +674,10 @@ class CustomerController extends Controller
     public function invoiceView($id)
     {
         // Fetch customer using the given ID or throw a 404 error if not found
-        $customer = Customer::with('service')->findOrFail($id);
+        $customer = Customer::with('service')->find($id);
+        if (!$customer) {
+            return response()->json(['success' => false, 'message' => 'Customer not found.'], 404);
+        }
 
         // Ensure that a related service exists for the customer
         $services = $customer->services->map(function ($service) {
@@ -711,23 +722,23 @@ class CustomerController extends Controller
         $payment_method = $paymentMethodsReadable[$customer->payment_method] ?? 'N/A';
 
         // Return the invoice view
-        return view('invoice.invoice', compact(
-            'customer',
-            'services',
-            'invoiceNumber',
-            'receiptNumber',
-            'created',
-            'date',
-            'receiptDate',
-            'vatValue',
-            'vatAmount',
-            'totalAmount',
-            'companyEmail',
-            'companyAddress',
-            'companyPhone',
-            'logo',
-            'payment_method'
-        ));
+        return response()->json([
+            'customer' => $customer,
+            'services' => $services,
+            'invoiceNumber' => $invoiceNumber,
+            'receiptNumber' => $receiptNumber,
+            'created' => $created,
+            'date' => $date,
+            'receiptDate' => $receiptDate,
+            'vatValue' => $vatValue,
+            'vatAmount' => $vatAmount,
+            'totalAmount' => $totalAmount,
+            'companyEmail' => $companyEmail,
+            'companyAddress' => $companyAddress,
+            'companyPhone' => $companyPhone,
+            'logo' => $logo,
+            'payment_method' => $payment_method
+        ]);
     }
 
     public function printInvoice($id)
@@ -1054,10 +1065,10 @@ class CustomerController extends Controller
         $customer = Customer::findOrFail($customerId);
 
         return response()->json([
-            'data_entry_time' => $customer->getDataEntryTimeAttribute() . ' minutes',
-            'expert_verification_time' => $customer->getExpertVerificationTimeAttribute() . ' minutes',
-            'supervisor_approval_time' => $customer->getSupervisorApprovalTimeAttribute() . ' minutes',
-            'total_verification_time' => $customer->getTotalVerificationTimeAttribute() . ' minutes',
+            'dataEntry' => $customer->getDataEntryTimeAttribute() ,
+            'expertVerification' => $customer->getExpertVerificationTimeAttribute() ,
+            'supervisorApproval' => $customer->getSupervisorApprovalTimeAttribute() ,
+            'totalVerification' => $customer->getTotalVerificationTimeAttribute() ,
         ]);
     }
 
