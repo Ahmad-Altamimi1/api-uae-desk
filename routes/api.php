@@ -48,15 +48,18 @@ Route::prefix('customers')->middleware(['auth:api'])->group(function () {
     Route::post('/upload/fta-docuemnt/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'storeFtaMedia'])->name('customers.upload.fta_document');
     Route::match(['post', 'put'], '/update/fta-docuemnt/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'updateFtaDocument'])->name('customers.updateFtaDocument');
     Route::get('/media/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'media'])->name('customers.media'); // Media Upload Route
-    Route::delete('/media/delete/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'deleteMedia'])->name('customers.media.delete');
+    Route::delete('/media/delete', [App\Http\Controllers\Admin\CustomerController::class, 'deleteMedia'])->name('customers.media.delete');
     Route::post('/{id}/submit-verification', [App\Http\Controllers\Admin\CustomerController::class, 'submitForVerification'])->name('customers.submit.verification');
     Route::post('/{customer}/submit-review', [App\Http\Controllers\Admin\CustomerController::class, 'submitForReview'])->name('customers.submit.review');
     Route::post('/{customer}/request-document', [App\Http\Controllers\Admin\CustomerController::class, 'requestDocument'])->name('customers.request.document');
     Route::post('/{customer}/add-tax-id', [App\Http\Controllers\Admin\CustomerController::class, 'addTaxId'])->name('customers.add.tax_id');
     Route::post('/customers/edit-status', [App\Http\Controllers\Admin\CustomerController::class, 'editStatus'])->name('customers.edit.status');
     Route::post('/customers/updateCreator', [App\Http\Controllers\Admin\CustomerController::class, 'updateCreator'])->name('customers.edit.creator');
+    Route::get('/invoices/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'invoiceView'])->name('invoices.view');
+    Route::get('/customers/export', [App\Http\Controllers\Admin\CustomerController::class, 'export'])->name('customers.export');
+    Route::get('/print-invoice/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'printInvoice'])->name('print-invoice');
+    Route::get('/print-receipt/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'printReceipt'])->name('print-receipt');
 });
-
 
 
 // Role
