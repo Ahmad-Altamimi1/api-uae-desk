@@ -61,17 +61,29 @@ class ServiceController extends Controller
 
     public function edit($id)
     {
-        $service = Service::findOrFail($id);
+        try {
+            $service = Service::findOrFail($id);
 
-        return view('admin.services.edit', compact('service'));
+            return response()->json([
+                'success' => true,
+                'data' => $service,
+                
+            ], 200);    
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Service not found.',
+                'error' => $e->getMessage()
+            ], 404);
+        }
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        $service = Service::findOrFail($id);
-
         $rules = [
             'name' => 'required|string|max:255',
+            'id'=>'required',
         ];
 
         $messages = [
@@ -81,12 +93,16 @@ class ServiceController extends Controller
         $this->validate($request, $rules, $messages);
 
         try {
+            $service = Service::findOrFail($request->id);
             $service->update($request->all());
             Toastr::success(__('Service updated successfully.'));
-            return redirect()->route('services.index');
+            return response()->json(['success' => true, 'message' => __('Service updated successfully.')]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            \Log::error('Service not found: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => __('Service not found.')], 404);
         } catch (\Exception $e) {
-            Toastr::error(__('Error updating service.'));
-            return redirect()->back();
+            \Log::error('Error updating service: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => __('Error updating service.')], 500);
         }
     }
 

@@ -419,7 +419,7 @@ class CustomerController extends Controller
     public function show($id)
     {
         
-        $customer = Customer::with(['branch', 'services', 'entries', 'media'])->find($id);
+        $customer = Customer::with(['branch', 'services', 'entries', 'media',"ftamedia"])->find($id);
         if (!$customer) {
             return response()->json(['error' => __('Customer not found.')], 404);
         }

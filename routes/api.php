@@ -90,7 +90,7 @@ Route::prefix('services')->middleware(['auth:api'])->group(function () {
     Route::get('/create', [App\Http\Controllers\Admin\ServiceController::class, 'create'])->name('services.create');
     Route::post('/store', [App\Http\Controllers\Admin\ServiceController::class, 'store'])->name('services.store');
     Route::get('/edit/{id}', [App\Http\Controllers\Admin\ServiceController::class, 'edit'])->name('services.edit');
-    Route::post('/update/{id}', [App\Http\Controllers\Admin\ServiceController::class, 'update'])->name('services.update');
+    Route::post('/update', [App\Http\Controllers\Admin\ServiceController::class, 'update'])->name('services.update');
     Route::post('/destroy', [App\Http\Controllers\Admin\ServiceController::class, 'destroy'])->name('services.destroy');
 });
 
