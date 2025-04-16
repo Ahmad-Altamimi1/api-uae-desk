@@ -25,7 +25,6 @@ class ServiceController extends Controller
     
         return response()->json([
             'success' => true,
-            'message' => 'Services Added successfully',
             'data' => $services
         ]);
     }
@@ -50,21 +49,41 @@ class ServiceController extends Controller
         $this->validate($request, $rules, $messages);
 
         try {
-            Service::create($request->all());
-            Toastr::success(__('Service created successfully.'));
-            return redirect()->route('services.index');
+            $service = Service::create($request->all());
+            return response()->json([
+                'success' => true,
+                'message' => __('Service created successfully.'),
+                'data' => $service
+            ], 201);
         } catch (\Exception $e) {
-            Toastr::error(__('Error creating service.'));
-            return redirect()->back();
+            return response()->json([
+                'success' => false,
+                'message' => __('Error creating service.'),
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 
+  
+    
     public function edit($id)
     {
-        $service = Service::findOrFail($id);
 
-        return view('admin.services.edit', compact('service'));
+        $service = Service::find($id);
+
+        if (!$service) {
+            return response()->json([
+            'success' => false,
+            'message' => 'Service not found.'
+            ], 404);
+        }
+    
+        return response()->json([
+            'success' => true,
+            'data' => $service,
+        ]);
     }
+    
 
     public function update(Request $request, $id)
     {

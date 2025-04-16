@@ -419,7 +419,7 @@ class CustomerController extends Controller
     public function show($id)
     {
         
-        $customer = Customer::with(['branch', 'services', 'entries', 'media'])->findOrFail($id);
+        $customer = Customer::with(['branch', 'services', 'entries', 'media','ftamedia'])->findOrFail($id);
         // Check if the user has the appropriate role
         if (!(Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Supervisor'))) {
             return response()->json(['error' => __('Customer not found or access denied.')], 404);
