@@ -49,7 +49,7 @@ Route::prefix('customers')->middleware(['auth:api'])->group(function () {
     Route::match(['post', 'put'], '/update/fta-docuemnt/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'updateFtaDocument'])->name('customers.updateFtaDocument');
     Route::get('/media/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'media'])->name('customers.media'); // Media Upload Route
     Route::delete('/media/delete', [App\Http\Controllers\Admin\CustomerController::class, 'deleteMedia'])->name('customers.media.delete');
-    Route::post('/{id}/submit-verification', [App\Http\Controllers\Admin\CustomerController::class, 'submitForVerification'])->name('customers.submit.verification');
+    Route::post('/submitVerification', [App\Http\Controllers\Admin\CustomerController::class, 'submitForVerification'])->name('customers.submit.verification');
     Route::post('/{customer}/submit-review', [App\Http\Controllers\Admin\CustomerController::class, 'submitForReview'])->name('customers.submit.review');
     Route::post('/{customer}/request-document', [App\Http\Controllers\Admin\CustomerController::class, 'requestDocument'])->name('customers.request.document');
     Route::post('/{customer}/add-tax-id', [App\Http\Controllers\Admin\CustomerController::class, 'addTaxId'])->name('customers.add.tax_id');
@@ -59,6 +59,7 @@ Route::prefix('customers')->middleware(['auth:api'])->group(function () {
     Route::get('/customers/export', [App\Http\Controllers\Admin\CustomerController::class, 'export'])->name('customers.export');
     Route::get('/print-invoice/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'printInvoice'])->name('print-invoice');
     Route::get('/print-receipt/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'printReceipt'])->name('print-receipt');
+    Route::get('/groupedMedia/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'groupedMedia'])->name('groupedMedia');
 });
 
 
@@ -113,6 +114,7 @@ Route::prefix('shifts')->middleware(['auth:api'])->group(function () {
     Route::get('/edit/{id}', [App\Http\Controllers\ShiftController::class, 'edit'])->name('shifts.edit');
     Route::post('/update/{id}', [App\Http\Controllers\ShiftController::class, 'update'])->name('shifts.update');
     Route::post('/destroy', [App\Http\Controllers\ShiftController::class, 'destroy'])->name('shifts.destroy');
+    Route::post('/updateStatus', [App\Http\Controllers\ShiftController::class, 'updateStatus'])->name('shifts.updateStatus');
 });
 
 // Attendance

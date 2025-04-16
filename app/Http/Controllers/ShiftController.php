@@ -78,7 +78,22 @@ class ShiftController extends Controller
         return redirect()->route('shifts.index')->with('success', 'Shift updated successfully!');
     }
 
-  
+    public function updateStatus(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:shifts,id',
+            'status' => 'required',
+        ]);
+
+        $shift = Shift::findOrFail($request->id);
+        $shift->is_active = $request->status;
+        $shift->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Shift status updated successfully!',
+        ]);
+    }
     public function destroy(Request $request)
     {
         try {
