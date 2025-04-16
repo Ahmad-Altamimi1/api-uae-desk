@@ -1104,6 +1104,8 @@
                                         </div>
                                     @endforeach
                                 @endif
+
+                                
                                 @if ($documentName == 'trade_license')
                                     <!-- Trade License Basic Information Section -->
                                     @foreach ($mediaItems as $index => $mediaItem)
