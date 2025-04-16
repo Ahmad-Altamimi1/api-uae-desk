@@ -419,7 +419,10 @@ class CustomerController extends Controller
     public function show($id)
     {
         
-        $customer = Customer::with(['branch', 'services', 'entries', 'media'])->findOrFail($id);
+        $customer = Customer::with(['branch', 'services', 'entries', 'media'])->find($id);
+        if (!$customer) {
+            return response()->json(['error' => __('Customer not found.')], 404);
+        }
         // Check if the user has the appropriate role
         if (!(Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Supervisor'))) {
             return response()->json(['error' => __('Customer not found or access denied.')], 404);
@@ -430,18 +433,24 @@ class CustomerController extends Controller
         $employees = User::role('operator')->get();
         $customerDetails = $customer->document_details ? json_decode($customer->document_details, true) : [];
         $getProcessTime = $this->getProcessTime($customer->id);
-        
         return response()->json([
             'customer' => $customer,
             'customerDetails' => $customerDetails,
             'processTime' => $getProcessTime,
             'entries' => $entries,
             'selectedServices' => $selectedServices,
-            'employees' => $employees
+            'employees' => $employees,
         ]);
     }
 
-    
+        public function groupedMedia($id){
+            $customer = Customer::findOrFail($id);
+            $groupedMedia = $customer->media->groupBy('document_name');
+            return response()->json([
+                'groupedMedia' => $groupedMedia,
+        ]);
+
+        }
     public function media($id)
     {
         $customer = Customer::findOrFail($id); // Retrieve customer by ID
@@ -515,8 +524,9 @@ class CustomerController extends Controller
         }
     }
 
-    public function submitForVerification($id)
+    public function submitForVerification(Request $request) //used
     {
+        $id = $request->id;
         $customer = Customer::findOrFail($id);
 
         try {
@@ -526,11 +536,10 @@ class CustomerController extends Controller
             $customer->update([
                 'submitted_for_verification_at' => now()
             ]);
-            Toastr::success(__('Customer submitted for verification successfully.'));
-            return redirect()->route('customers.index');
+
+            return response()->json(['success' => true, 'message' => __('Customer submitted for verification successfully.')]);
         } catch (\Exception $e) {
-            Toastr::error(__('Error submitting customer for verification.'));
-            return redirect()->back();
+            return response()->json(['success' => false, 'message' => __('Error submitting customer for verification.')], 500);
         }
     }
 
