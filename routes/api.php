@@ -51,7 +51,7 @@ Route::prefix('customers')->middleware(['auth:api'])->group(function () {
     Route::delete('/media/delete', [App\Http\Controllers\Admin\CustomerController::class, 'deleteMedia'])->name('customers.media.delete');
     Route::post('/submitVerification', [App\Http\Controllers\Admin\CustomerController::class, 'submitForVerification'])->name('customers.submit.verification');
     Route::post('/{customer}/submit-review', [App\Http\Controllers\Admin\CustomerController::class, 'submitForReview'])->name('customers.submit.review');
-    Route::post('/{customer}/request-document', [App\Http\Controllers\Admin\CustomerController::class, 'requestDocument'])->name('customers.request.document');
+    Route::post('/requestDocument', [App\Http\Controllers\Admin\CustomerController::class, 'requestDocument'])->name('customers.request.document');
     Route::post('/{customer}/add-tax-id', [App\Http\Controllers\Admin\CustomerController::class, 'addTaxId'])->name('customers.add.tax_id');
     Route::post('/customers/edit-status', [App\Http\Controllers\Admin\CustomerController::class, 'editStatus'])->name('customers.edit.status');
     Route::post('/customers/updateCreator', [App\Http\Controllers\Admin\CustomerController::class, 'updateCreator'])->name('customers.edit.creator');
@@ -60,6 +60,8 @@ Route::prefix('customers')->middleware(['auth:api'])->group(function () {
     Route::get('/print-invoice/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'printInvoice'])->name('print-invoice');
     Route::get('/print-receipt/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'printReceipt'])->name('print-receipt');
     Route::get('/groupedMedia/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'groupedMedia'])->name('groupedMedia');
+    Route::post('/savedocumentdetails', [App\Http\Controllers\Admin\CustomerController::class, 'saveDocumentDetails'])->name('saveDocumentDetails');
+    Route::get('/servicesDetails/{id}', [App\Http\Controllers\Admin\CustomerController::class, 'servicesDetails'])->name('servicesDetails');
 });
 
 
