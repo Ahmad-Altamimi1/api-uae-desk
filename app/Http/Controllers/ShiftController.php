@@ -39,18 +39,21 @@ class ShiftController extends Controller
             'start_time' => 'required',
             'end_time' => 'required',
         ]);
-
-
+    
         $shift = new Shift();
         $shift->name = $request->name;
         $shift->start_time = $request->start_time;
         $shift->end_time = $request->end_time;
-
         $shift->is_active = $request->is_active ? 1 : 0;
         $shift->save();
-
-        return redirect()->route('shifts.index')->with('success', 'Shift created successfully!');
+    
+        return response()->json([
+            'success' => true,
+            'message' => 'Shift created successfully!',
+            'data' => $shift
+        ], 201);
     }
+    
 
     public function edit(Shift $shift)
     {

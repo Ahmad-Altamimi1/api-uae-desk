@@ -31,6 +31,7 @@ use Stripe\Stripe;
 use Stripe\Checkout\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+
 class CustomerController extends Controller
 {
     function __construct()
@@ -46,60 +47,59 @@ class CustomerController extends Controller
     }
     public function index(Request $request)
     {
-            if (auth()->user()->hasRole('operator')||true) {
-                $customers = Customer::with(['services', 'branch'])
-                    ->where('created_by', auth()->id())
-                    ->where('status', '!=', 3)
-                    ->get();
-            } elseif (auth()->user()->hasRole('expert')) {
-                $customers = Customer::with(['services', 'branch'])
-                    ->where('status', '!=', 0)
-                    ->get();
-            } else {
-                $customers = Customer::with(['services', 'branch'])
-                    ->orderBy('updated_at', 'desc')
-                    ->get();
-            }
-    
-            return response()->json($customers->map(function ($customer) {
-                return [
-                    'id' => $customer->id,
-                    'first_name' => $customer->first_name,
-                    'last_name' => $customer->last_name,
-                    'business_name' => $customer->business_name,
-                    'phone_number' => $customer->phone_number,
-                    'email' => $customer->email,
-                    'customer_code' => $customer->customer_code,
+        if (auth()->user()->hasRole('operator') || true) {
+            $customers = Customer::with(['services', 'branch'])
+                ->where('created_by', auth()->id())
+                ->where('status', '!=', 3)
+                ->get();
+        } elseif (auth()->user()->hasRole('expert')) {
+            $customers = Customer::with(['services', 'branch'])
+                ->where('status', '!=', 0)
+                ->get();
+        } else {
+            $customers = Customer::with(['services', 'branch'])
+                ->orderBy('updated_at', 'desc')
+                ->get();
+        }
+
+        return response()->json($customers->map(function ($customer) {
+            return [
+                'id' => $customer->id,
+                'first_name' => $customer->first_name,
+                'last_name' => $customer->last_name,
+                'business_name' => $customer->business_name,
+                'phone_number' => $customer->phone_number,
+                'email' => $customer->email,
+                'customer_code' => $customer->customer_code,
 
 
-                    'branch' => $customer->branch ? $customer->branch->branch_name : null,
-                    'services' => $customer->services->pluck('name'),
-                    'created_reviewed_by' => (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('supervisor'))
-                        ? [
-                            'created_by' => $customer->creator ? $customer->creator->name : 'N/A',
-                            'reviewed_by' => $customer->review ? $customer->review->name : 'N/A',
-                        ] : null,
-                    'status' =>$customer->status,
-                    // 'actions' => [
-                    //     'view' => (Gate::check('customers-view') || auth()->user()->hasRole('supervisor'))
-                    //         ? route('customers.show', $customer->id) : null,
-                    //     'edit' => (Gate::check('customers-edit') || auth()->user()->hasRole('supervisor')) &&
-                    //         (auth()->user()->hasRole('operator') && in_array($customer->status, [0, 1]) || auth()->user()->hasRole('supervisor'))
-                    //         ? route('customers.edit', $customer->id) : null,
-                    //     'delete' => Gate::check('customers-delete')
-                    //         ? route('customers.destroy', $customer->id) : null,
-                    //     'upload_media' => (Gate::check('customers-upload-media') || auth()->user()->hasRole('supervisor'))
-                    //         ? route('customers.media', $customer->id) : null,
-                    //     'print_invoice' => route('invoices.view', ['id' => $customer->id]),
-                    //     'account_statement' => (Gate::check('customers-account') || auth()->user()->hasRole('supervisor') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'))
-                    //         ? route('customers.account-statement', $customer->id) : null,
-                    // ],
-                    'document_indicator' => auth()->user()->hasRole('operator') && DocumentRequest::where('customer_id', $customer->id)->where('is_viewed', false)->exists(),
-                ];
-            }));
-    
+                'branch' => $customer->branch ? $customer->branch->branch_name : null,
+                'services' => $customer->services->pluck('name'),
+                'created_reviewed_by' => (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('supervisor'))
+                    ? [
+                        'created_by' => $customer->creator ? $customer->creator->name : 'N/A',
+                        'reviewed_by' => $customer->review ? $customer->review->name : 'N/A',
+                    ] : null,
+                'status' => $customer->status,
+                // 'actions' => [
+                //     'view' => (Gate::check('customers-view') || auth()->user()->hasRole('supervisor'))
+                //         ? route('customers.show', $customer->id) : null,
+                //     'edit' => (Gate::check('customers-edit') || auth()->user()->hasRole('supervisor')) &&
+                //         (auth()->user()->hasRole('operator') && in_array($customer->status, [0, 1]) || auth()->user()->hasRole('supervisor'))
+                //         ? route('customers.edit', $customer->id) : null,
+                //     'delete' => Gate::check('customers-delete')
+                //         ? route('customers.destroy', $customer->id) : null,
+                //     'upload_media' => (Gate::check('customers-upload-media') || auth()->user()->hasRole('supervisor'))
+                //         ? route('customers.media', $customer->id) : null,
+                //     'print_invoice' => route('invoices.view', ['id' => $customer->id]),
+                //     'account_statement' => (Gate::check('customers-account') || auth()->user()->hasRole('supervisor') || auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin'))
+                //         ? route('customers.account-statement', $customer->id) : null,
+                // ],
+                'document_indicator' => auth()->user()->hasRole('operator') && DocumentRequest::where('customer_id', $customer->id)->where('is_viewed', false)->exists(),
+            ];
+        }));
     }
-    
+
 
 
     public function create()
@@ -110,14 +110,14 @@ class CustomerController extends Controller
         return view('admin.customers.create', compact('services', 'settings', 'branches'));
     }
 
-    
+
 
     public function store(Request $request)
     {
-     
-        
+
+
         $validator = Validator::make($request->all(), [
-            'service_id' => 'required|array',  
+            'service_id' => 'required|array',
             'service_id.*' => 'exists:services,id',
             // 'service_price' => 'required|array',
             // 'service_price.*' => 'numeric|min:0',
@@ -142,19 +142,19 @@ class CustomerController extends Controller
             'gmail_password' => 'nullable',
             'entries' => 'nullable|array', // Add a rule if needed
         ]);
-        
+
         if ($validator->fails()) {
             throw new HttpResponseException(response()->json([
                 'errors' => $validator->errors()
             ], 422));
         }
-        
+
         $validated = $validator->validated();
-        
+
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
-        } 	
+        }
         if ($validated['payment_method'] === 'stripe') {
             $validated['transaction_refrence_number'] = null;
         }
@@ -235,7 +235,7 @@ class CustomerController extends Controller
             return auth()->user()->hasRole('supervisor') || auth()->user()->hasRole("Admin") || auth()->user()->hasRole('Super Admin') ? redirect()->route('branches.allBranchesData') : redirect()->route('customers.index');
         }
 
-        return response()->json(['message' => 'Customer added successfully.',"id"=>$customer->id], 201);
+        return response()->json(['message' => 'Customer added successfully.', "id" => $customer->id], 201);
     }
 
     public function edit($id)
@@ -243,7 +243,7 @@ class CustomerController extends Controller
         try {
             $customer = Customer::findOrFail($id);
             $services = Service::all();
-            $settings = Setting::first(); 
+            $settings = Setting::first();
             $branches = Branch::all();
             $entries = $customer->entries;
             // Retrieve selected service IDs and their prices for the customer
@@ -274,14 +274,14 @@ class CustomerController extends Controller
 
     public function update(Request $request)
     {
-      
+
         try {
-              $id = $request->id;
+            $id = $request->id;
             // Find the customer by ID
             $customer = Customer::findOrFail($id);
             // Validate incoming request data
             $validator = Validator::make($request->all(), [
-                'service_id' => 'required|array',  
+                'service_id' => 'required|array',
                 'service_id.*' => 'exists:services,id',
                 // 'service_price' => 'required|array',
                 // 'service_price.*' => 'numeric|min:0',
@@ -306,19 +306,19 @@ class CustomerController extends Controller
                 'gmail_password' => 'nullable',
                 'entries' => 'nullable|array', // Add a rule if needed
             ]);
-            
+
             if ($validator->fails()) {
                 throw new HttpResponseException(response()->json([
                     'errors' => $validator->errors()
                 ], 422));
             }
-            
+
             $validated = $validator->validated();
-            
-    
+
+
             if ($validator->fails()) {
                 return response()->json(['errors' => $validator->errors()], 422);
-            } 	
+            }
             $existingEntries = ModelsEntry::where('customer_id', $customer->id)->pluck('id')->toArray();
             if (auth()->user()->hasRole('supervisor')) {
                 $validated['updated_by'] = auth()->id();
@@ -356,7 +356,7 @@ class CustomerController extends Controller
                 ->whereNotIn('id', $newEntryIds)
                 ->delete();
 
-           
+
             $servicesWithPrices = [];
             foreach ($request->service_id as $serviceId) {
                 $servicesWithPrices[$serviceId] = ['price' => $request->service_price[$serviceId] ?? 0];
@@ -427,7 +427,7 @@ class CustomerController extends Controller
         if (!(Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Supervisor'))) {
             return response()->json(['error' => __('Customer not found or access denied.')], 404);
         }
-        
+
         $selectedServices = $customer->services()->pluck('services.id')->toArray();
         $entries = $customer->entries;
         $employees = User::role('operator')->get();
@@ -442,6 +442,7 @@ class CustomerController extends Controller
             'employees' => $employees,
         ]);
     }
+
 
     public function servicesDetails($id)
     {
@@ -467,9 +468,16 @@ class CustomerController extends Controller
             $groupedMedia = $customer->media->groupBy('document_name');
             return response()->json([
                 'groupedMedia' => $groupedMedia,
-        ]);
 
-        }
+    public function groupedMedia($id)
+    {
+        $customer = Customer::findOrFail($id);
+        $groupedMedia = $customer->media->groupBy('document_name');
+        return response()->json([
+            'groupedMedia' => $groupedMedia,
+
+        ]);
+    }
     public function media($id)
     {
         $customer = Customer::findOrFail($id); // Retrieve customer by ID
@@ -489,15 +497,15 @@ class CustomerController extends Controller
             Log::error('Validation error while storing media.', ['errors' => $e->errors()]);
             return response()->json(['message' => __('The provided data is invalid.'), 'errors' => $e->errors()], 422);
         }
-    
+
         $customer = Customer::findOrFail($request->input('id'));
-    
+
         try {
             if ($request->hasFile('media')) {
                 foreach ($request->file('media') as $file) {
                     $fileName = $file->getClientOriginalName();
                     $path = $file->store('uploads/customers/' . $customer->id, 'public');
-    
+
                     CustomerMedia::create([
                         'customer_id' => $customer->id,
                         'document_name' => $request->input('document_name') ?: $fileName,
@@ -505,7 +513,7 @@ class CustomerController extends Controller
                     ]);
                 }
             }
-    
+
             Log::info('Media uploaded successfully for customer.', ['customer_id' => $customer->id]);
             return response()->json(['success' => true, 'message' => __('Media uploaded successfully.')]);
         } catch (\Exception $e) {
@@ -517,7 +525,7 @@ class CustomerController extends Controller
             ], 500);
         }
     }
-    
+
 
     public function deleteMedia(Request $request)
     {
@@ -1099,10 +1107,10 @@ class CustomerController extends Controller
         $customer = Customer::findOrFail($customerId);
 
         return response()->json([
-            'dataEntry' => $customer->getDataEntryTimeAttribute() ,
-            'expertVerification' => $customer->getExpertVerificationTimeAttribute() ,
-            'supervisorApproval' => $customer->getSupervisorApprovalTimeAttribute() ,
-            'totalVerification' => $customer->getTotalVerificationTimeAttribute() ,
+            'dataEntry' => $customer->getDataEntryTimeAttribute(),
+            'expertVerification' => $customer->getExpertVerificationTimeAttribute(),
+            'supervisorApproval' => $customer->getSupervisorApprovalTimeAttribute(),
+            'totalVerification' => $customer->getTotalVerificationTimeAttribute(),
         ]);
     }
 
