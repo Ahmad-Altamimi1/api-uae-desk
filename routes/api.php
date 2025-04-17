@@ -25,7 +25,7 @@ Route::get('/test', function () {
 });
 
 Route::post('/login', [ahmad::class, 'login']);
-Route::post('/logout', [ahmad::class, 'logout'])->middleware(['auth:api']); 
+Route::post('/logout', [ahmad::class, 'logout'])->middleware(['auth:api']);
 
 // Route::post('/login', [LoginController::class, 'login']);
 // Route::middleware(['auth:api', 'permission:user-list'])->get('/user', function (Request $request) {
@@ -33,6 +33,17 @@ Route::post('/logout', [ahmad::class, 'logout'])->middleware(['auth:api']);
 //     $permissions = $user->getAllPermissions();
 //     return response()->json(['user' => $user, 'permissions' => $permissions]);
 // });
+
+
+
+
+// home dashboard 
+Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'dashboard'])->name('dashboard')
+->middleware(['auth:api']);
+
+
+
+
 Route::post('/customers/media/store', [App\Http\Controllers\Admin\CustomerController::class, 'storeMedia'])->middleware(['auth:api']); 
 // ->middleware(['auth:api', 'permission:user-list'])
 Route::prefix('customers')->middleware(['auth:api'])->group(function () {
