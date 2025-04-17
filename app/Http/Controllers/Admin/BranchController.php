@@ -28,27 +28,26 @@ class BranchController extends Controller
     public function index(Request $request)
     {
         $branches = Branch::with('location')->get();
-    
+
         return response()->json([
             'success' => true,
             'message' => 'Branches Added successfully',
             'data' => $branches
         ]);
-
     }
-    
+
 
     public function create()
     {
         $locations = Location::all();
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Locations Added successfully',
             'data' => $locations
         ]);
     }
-    
+
 
     public function store(Request $request)
     {
@@ -87,37 +86,48 @@ class BranchController extends Controller
         try {
             $branch = Branch::create($input);
             return response()->json([
-            'success' => true,
-            'message' => __('Branch created successfully.'),
-            'data' => $branch
+                'success' => true,
+                'message' => __('Branch created successfully.'),
+                'data' => $branch
             ]);
-
         } catch (\Exception $e) {
             return response()->json([
-            'success' => false,
-            'message' => __('Error creating branch.'),
-            'error' => $e->getMessage()
+                'success' => false,
+                'message' => __('Error creating branch.'),
+                'error' => $e->getMessage()
             ], 500);
         }
     }
 
     public function edit($id)
     {
-        $branch = Branch::findOrFail($id); // Retrieve the branch by ID
-        $locations = Location::all();
+        try {
+            $branch = Branch::findOrFail($id);
+            $locations = Location::all();
 
-        return view('admin.branches.edit', compact('branch', 'locations'));
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'branch' => $branch,
+                    'locations' => $locations,
+                ],
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Branch not found.',
+                'error' => $e->getMessage(),
+            ], 404);
+        }
     }
-
-    public function update(Request $request, $id)
+    public function update(Request $request)
     {
-        $branch = Branch::findOrFail($id); // Retrieve the branch by ID
-
+        
         $rules = [
             'branch_name' => 'required|string',
             'address' => 'nullable|string',
             'phone_number' => 'nullable|string',
-            'email' => 'nullable|email|unique:branches,email,' . $branch->id,
+            'email' => 'nullable|email|unique:branches,email,' . $request->id,
             'location_id' => 'required|exists:locations,id',
             'latitude' => 'required',
             'longitude' => 'required',
@@ -129,28 +139,45 @@ class BranchController extends Controller
             'phone_number.required' => __('Phone number is required.'),
             'email.required' => __('Email is required.'),
             'email.unique' => __('Email must be unique.'),
-            'latitude.required' => __('latitude is required.'),
-            'longitude.required' => __('longitude is required.'),
+            'latitude.required' => __('Latitude is required.'),
+            'longitude.required' => __('Longitude is required.'),
         ];
-        $this->validate($request, $rules, $messages);
+        try {
+            $this->validate($request, $rules, $messages);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+            'success' => false,
+            'message' => __('Validation errors occurred.'),
+            'errors' => $e->errors(),
+            ], 422);
+        }
+
 
         try {
+            $branch = Branch::findOrFail($request->id); // Retrieve the branch by ID
             $branch->update($request->all());
-            Toastr::success(__('Branch updated successfully.'));
-            return redirect()->route('branches.index');
+            return response()->json([
+                'success' => true,
+                'message' => __('Branch updated successfully.'),
+                'data' => $branch
+            ]);
         } catch (\Exception $e) {
-            Toastr::error(__('Error updating branch.'));
-            return redirect()->back();
+            return response()->json([
+                'success' => false,
+                'message' => __('Error updating branch.'),
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 
- 
+
+
     public function destroy(Request $request)
     {
         try {
             $branch = Branch::findOrFail($request->id);
             $branch->delete();
-    
+
             return response()->json([
                 'success' => true,
                 'message' => __('Branch deleted successfully.'),
@@ -162,7 +189,7 @@ class BranchController extends Controller
             ], 500);
         }
     }
-    
+
 
     // public function allBranchesData(Request $request)
     // {
