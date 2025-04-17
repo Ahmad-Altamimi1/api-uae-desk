@@ -443,12 +443,39 @@ class CustomerController extends Controller
         ]);
     }
 
+
+    public function servicesDetails($id)
+    {
+        
+        $customer = Customer::findOrFail($id);
+        if (!$customer) {
+            return response()->json(['error' => __('Customer not found.')], 404);
+        }
+        // Check if the user has the appropriate role
+        if (!(Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Supervisor'))) {
+            return response()->json(['error' => __('Customer not found or access denied.')], 404);
+        }
+        
+       
+        $servicesDetails = $customer->document_details ? json_decode($customer->document_details, true) : [];
+        return response()->json([
+            'servicesDetails' => $servicesDetails,
+        ]);
+    }
+
+        public function groupedMedia($id){
+            $customer = Customer::findOrFail($id);
+            $groupedMedia = $customer->media->groupBy('document_name');
+            return response()->json([
+                'groupedMedia' => $groupedMedia,
+
     public function groupedMedia($id)
     {
         $customer = Customer::findOrFail($id);
         $groupedMedia = $customer->media->groupBy('document_name');
         return response()->json([
             'groupedMedia' => $groupedMedia,
+
         ]);
     }
     public function media($id)
@@ -582,9 +609,11 @@ class CustomerController extends Controller
         }
     }
 
-    public function requestDocument(Request $request, Customer $customer)
+    public function requestDocument(Request $request)
     {
+
         try {
+            $id = $request->id;
             // Validate the request data
             $validated = $request->validate([
                 'document_type' => 'required|string',
@@ -592,8 +621,8 @@ class CustomerController extends Controller
             ]);
 
             // Store the document request details in the database
-            DocumentRequest::create([
-                'customer_id' => $customer->id,
+            $newDocumentRequest = DocumentRequest::create([
+                'customer_id' => $id,
                 'document_type' => $validated['document_type'],
                 'document_details' => $validated['document_details'],
                 'requested_by' => Auth::user()->id, // Store the ID of the authenticated user
@@ -601,16 +630,15 @@ class CustomerController extends Controller
             ]);
 
             // Update the customer's status to Pending
+            $customer = Customer::findOrFail($id);
             $customer->update([
                 'status' => 0, // Pending
             ]);
 
-            // Success message
-            Toastr::success(__('Document request submitted successfully.'));
-            return redirect()->route('branches.allBranchesData');
+            // Success response
+            return response()->json(['success' => true, 'message' => __('Document request submitted successfully.'), 'newDocumentRequestId' => $newDocumentRequest->id], 200);
         } catch (\Exception $e) {
-            Toastr::error(__('Error requesting document.'));
-            return redirect()->back();
+            return response()->json(['success' => false, 'message' => __('Error requesting document.')], 500);
         }
     }
 
@@ -657,9 +685,9 @@ class CustomerController extends Controller
     }
 
 
-    public function saveDocumentDetails(Request $request, $id)
+    public function saveDocumentDetails(Request $request) //Done
     {
-        $request->validate([
+        $validator = Validator::make($request->all(), [
             'profile_name_en' => 'nullable|string|max:255',
             'profile_name_ar' => 'nullable|string|max:255',
             'preferred_language' => 'nullable|string',
@@ -669,14 +697,19 @@ class CustomerController extends Controller
             'tax_certificate' => 'nullable|array',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => 'Validation errors.', 'errors' => $validator->errors()], 422);
+        }
+
         try {
-            $customer = Customer::findOrFail($id);
+            $customerId = $request->id; 
+            $customer = Customer::findOrFail($customerId);
             $customer->document_details = json_encode($request->all());
             $customer->save();
 
-            return response()->json(['success' => true, 'message' => 'Details saved successfully!']);
+            return response()->json(['success' => true, 'message' => 'Details saved successfully!'], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to save details.']);
+            return response()->json(['success' => false, 'message' => 'Failed to save details.'], 500);
         }
     }
 
