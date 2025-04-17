@@ -102,7 +102,7 @@ Route::prefix('branches')->middleware(['auth:api'])->group(function () {
     Route::get('/create', [App\Http\Controllers\Admin\BranchController::class, 'create'])->name('branches.create');
     Route::post('/store', [App\Http\Controllers\Admin\BranchController::class, 'store'])->name('branches.store');
     Route::get('/edit/{id}', [App\Http\Controllers\Admin\BranchController::class, 'edit'])->name('branches.edit');
-    Route::post('/update/{id}', [App\Http\Controllers\Admin\BranchController::class, 'update'])->name('branches.update');
+    Route::post('/update', [App\Http\Controllers\Admin\BranchController::class, 'update'])->name('branches.update');
     Route::post('/destroy', [App\Http\Controllers\Admin\BranchController::class, 'destroy'])->name('branches.destroy');
 });
 
@@ -112,7 +112,7 @@ Route::prefix('shifts')->middleware(['auth:api'])->group(function () {
     Route::get('/create', [App\Http\Controllers\ShiftController::class, 'create'])->name('shifts.create');
     Route::post('/store', [App\Http\Controllers\ShiftController::class, 'store'])->name('shifts.store');
     Route::get('/edit/{id}', [App\Http\Controllers\ShiftController::class, 'edit'])->name('shifts.edit');
-    Route::post('/update/{id}', [App\Http\Controllers\ShiftController::class, 'update'])->name('shifts.update');
+    Route::post('/update', [App\Http\Controllers\ShiftController::class, 'update'])->name('shifts.update');
     Route::post('/destroy', [App\Http\Controllers\ShiftController::class, 'destroy'])->name('shifts.destroy');
     Route::post('/updateStatus', [App\Http\Controllers\ShiftController::class, 'updateStatus'])->name('shifts.updateStatus');
 });
