@@ -129,7 +129,7 @@ public function getDataEntryTimeAttribute()
     {
         return $this->belongsToMany(Service::class, 'customer_services')->withPivot('price'); // Include price in pivot;
     }
-    public function entries()
+    public function upcomingPayments()
     {
         return $this->hasMany(Entry::class);
     }

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
-class ahmad extends Controller
+class AuthController extends Controller
 {
     //////////////////////
     public function login(Request $request)
@@ -49,29 +49,29 @@ class ahmad extends Controller
 
     public function logout(Request $request)
     {
-        
-       
-            // Check if the user is authenticated
-            if (!auth()->check()) {
-                // Log unauthenticated logout attempt (error level)
-                Log::error('Unauthenticated user attempted to logout', [
-                    'ip' => $request->ip()
-                ]);
-    
-                return response()->json(['message' => 'Unauthenticated.'], 401);
-            }
-    
-            // Revoke the user's token
-            $request->user()->token()->revoke();
-    
-            // Log successful logout attempt (info level)
-            Log::info('User logged out successfully', [
-                'user_id' => $request->user()->id,
+
+
+        // Check if the user is authenticated
+        if (!auth()->check()) {
+            // Log unauthenticated logout attempt (error level)
+            Log::error('Unauthenticated user attempted to logout', [
                 'ip' => $request->ip()
             ]);
-    
-            return response()->json([
-                'message' => 'User logged out successfully!'
-            ], 200);
+
+            return response()->json(['message' => 'Unauthenticated.'], 401);
         }
+
+        // Revoke the user's token
+        $request->user()->token()->revoke();
+
+        // Log successful logout attempt (info level)
+        Log::info('User logged out successfully', [
+            'user_id' => $request->user()->id,
+            'ip' => $request->ip()
+        ]);
+
+        return response()->json([
+            'message' => 'User logged out successfully!'
+        ], 200);
+    }
 }
