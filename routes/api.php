@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\ahmad;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -24,8 +24,8 @@ Route::get('/test', function () {
     return response()->json(['message' => User::all()]);
 });
 
-Route::post('/login', [ahmad::class, 'login']);
-Route::post('/logout', [ahmad::class, 'logout'])->middleware(['auth:api']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth:api']);
 
 // Route::post('/login', [LoginController::class, 'login']);
 // Route::middleware(['auth:api', 'permission:user-list'])->get('/user', function (Request $request) {
@@ -39,12 +39,12 @@ Route::post('/logout', [ahmad::class, 'logout'])->middleware(['auth:api']);
 
 // home dashboard 
 Route::get('/dashboard', [App\Http\Controllers\Admin\DashboardController::class, 'dashboard'])->name('dashboard')
-->middleware(['auth:api']);
+    ->middleware(['auth:api']);
 
 
 
 
-Route::post('/customers/media/store', [App\Http\Controllers\Admin\CustomerController::class, 'storeMedia'])->middleware(['auth:api']); 
+Route::post('/customers/media/store', [App\Http\Controllers\Admin\CustomerController::class, 'storeMedia'])->middleware(['auth:api']);
 // ->middleware(['auth:api', 'permission:user-list'])
 Route::prefix('customers')->middleware(['auth:api'])->group(function () {
     Route::get('/index', [App\Http\Controllers\Admin\CustomerController::class, 'index'])->name('customers.index');
@@ -156,4 +156,3 @@ Route::middleware(['auth:api'])->get('/logs', function () {
         'logs' => $logs
     ]);
 });
-

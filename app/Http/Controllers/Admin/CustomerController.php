@@ -140,7 +140,7 @@ class CustomerController extends Controller
             'payment_method' => 'nullable|string',
             'gmail_user_name' => 'nullable',
             'gmail_password' => 'nullable',
-            'entries' => 'nullable|array', // Add a rule if needed
+            'upcoming_payments' => 'nullable|array', // Add a rule if needed
         ]);
 
         if ($validator->fails()) {
@@ -165,8 +165,8 @@ class CustomerController extends Controller
         $validated['serial_number'] = User::generateSerialNumber();
 
         $customer = Customer::create($validated);
-        if (isset($request['entries'])) {
-            foreach ($validated['entries'] as $upcomingPayment) {
+        if (isset($request['upcoming_payments'])) {
+            foreach ($validated['upcoming_payments'] as $upcomingPayment) {
                 ModelsEntry::create([
                     'customer_id' => $customer->id,
                     'date' => $upcomingPayment['date'],
@@ -242,10 +242,12 @@ class CustomerController extends Controller
     {
         try {
             $customer = Customer::findOrFail($id);
+        $customer = Customer::with(['upcomingPayments'])->find($id);
+
             $services = Service::all();
             $settings = Setting::first();
             $branches = Branch::all();
-            $entries = $customer->entries;
+            $upcoming_payments = $customer->upcoming_payments;
             // Retrieve selected service IDs and their prices for the customer
             $selectedServices = $customer->services()->pluck('services.id')->toArray();
             $selectedServicePrices = $customer->services()->pluck('customer_services.price', 'services.id')->toArray();
@@ -259,7 +261,7 @@ class CustomerController extends Controller
                     'settings' => $settings,
                     'selectedServices' => $selectedServices,
                     'selectedServicePrices' => $selectedServicePrices,
-                    "entries" => $entries,
+                    "upcoming_payments" => $upcoming_payments,
                 ]
             ]);
         } catch (\Exception $e) {
@@ -304,7 +306,7 @@ class CustomerController extends Controller
                 'payment_method' => 'nullable|string',
                 'gmail_user_name' => 'nullable',
                 'gmail_password' => 'nullable',
-                'entries' => 'nullable|array', // Add a rule if needed
+                'upcoming_payments' => 'nullable|array', // Add a rule if needed
             ]);
 
             if ($validator->fails()) {
@@ -325,9 +327,9 @@ class CustomerController extends Controller
             }
 
             $newEntryIds = [];
-            if (isset($validated['entries'])) {
+            if (isset($validated['upcoming_payments'])) {
 
-                foreach ($validated['entries'] as $entry) {
+                foreach ($validated['upcoming_payments'] as $entry) {
                     if (isset($entry['id']) && in_array($entry['id'], $existingEntries)) {
                         // Update existing entry
                         ModelsEntry::where('id', $entry['id'])->update([
@@ -351,7 +353,7 @@ class CustomerController extends Controller
                     }
                 }
             }
-            // Delete removed entries
+            // Delete removed upcoming_payments
             ModelsEntry::where('customer_id', $customer->id)
                 ->whereNotIn('id', $newEntryIds)
                 ->delete();
@@ -419,7 +421,7 @@ class CustomerController extends Controller
     public function show($id)
     {
         
-        $customer = Customer::with(['branch', 'services', 'entries', 'media',"ftamedia"])->find($id);
+        $customer = Customer::with(['branch', 'services', 'upcomingPayments', 'media',"ftamedia"])->find($id);
         if (!$customer) {
             return response()->json(['error' => __('Customer not found.')], 404);
         }
@@ -429,7 +431,7 @@ class CustomerController extends Controller
         }
 
         $selectedServices = $customer->services()->pluck('services.id')->toArray();
-        $entries = $customer->entries;
+        $upcoming_payments = $customer->upcoming_payments;
         $employees = User::role('operator')->get();
         $customerDetails = $customer->document_details ? json_decode($customer->document_details, true) : [];
         $getProcessTime = $this->getProcessTime($customer->id);
@@ -437,7 +439,6 @@ class CustomerController extends Controller
             'customer' => $customer,
             'customerDetails' => $customerDetails,
             'processTime' => $getProcessTime,
-            'entries' => $entries,
             'selectedServices' => $selectedServices,
             'employees' => $employees,
         ]);
@@ -463,12 +464,7 @@ class CustomerController extends Controller
         ]);
     }
 
-        public function groupedMedia($id){
-            $customer = Customer::findOrFail($id);
-            $groupedMedia = $customer->media->groupBy('document_name');
-            return response()->json([
-                'groupedMedia' => $groupedMedia,
-
+    
     public function groupedMedia($id)
     {
         $customer = Customer::findOrFail($id);
