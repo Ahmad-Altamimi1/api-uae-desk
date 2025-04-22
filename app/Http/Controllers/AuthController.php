@@ -21,6 +21,9 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $remember)) {
             $user = Auth::user();
+            $permissions = $user->getAllPermissions();
+            $permissions = $user->getAllPermissions()->pluck('name');
+
             $token = $user->createToken('authToken')->accessToken;
 
             Log::info('User logged in successfully', [
@@ -31,6 +34,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'user' => $user,
+                'permissions' => $permissions,
                 "message" => "User logged in successfully.",
                 'access_token' => $token,
             ], 200);

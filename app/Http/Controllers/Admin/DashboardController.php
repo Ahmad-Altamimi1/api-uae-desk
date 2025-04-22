@@ -12,14 +12,14 @@ class DashboardController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('auth');
-        $this->middleware('permission:dashboard', ['only' => ['index']]);
+        // $this->middleware('auth');
+        // $this->middleware('permission:dashboard', ['only' => ['index']]);
     }
     public function dashboard(Request $request)
     {
         $user = auth()->user();
 
-        if ($user->hasRole('admin') || $user->hasRole('Admin') || $user->hasRole('super-admin') || $user->hasRole('Super Admin')) {
+        if ( $user->hasRole('admin') || $user->hasRole('Admin') || $user->hasRole('super-admin') || $user->hasRole('Super Admin')) {
             $usersCount = User::count();
             $adminCount = User::role('admin')->count();
             $appointmentsCount = Customer::count();

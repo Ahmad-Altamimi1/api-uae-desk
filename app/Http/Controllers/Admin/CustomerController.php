@@ -37,13 +37,13 @@ class CustomerController extends Controller
     function __construct()
     {
         //TODO
-        // $this->middleware('auth');
-        // $this->middleware('permission:customers-list', ['only' => ['index', 'store']]);
-        // $this->middleware('permission:customers-create', ['only' => ['create', 'store']]);
-        // $this->middleware('permission:customers-edit', ['only' => ['edit', 'update']]);
-        // $this->middleware('permission:customers-delete', ['only' => ['destroy']]);
-        // $this->middleware('role:supervisor');
-        // date_default_timezone_set('Asia/Dubai');
+        $this->middleware('auth');
+        $this->middleware('permission:customers-list', ['only' => ['index', 'store']]);
+        $this->middleware('permission:customers-view', ['only' => ['show']]);
+        $this->middleware('permission:customers-create', ['only' => ['create', 'store']]);
+        $this->middleware('permission:customers-edit', ['only' => ['edit', 'update']]);
+        $this->middleware('permission:customers-delete', ['only' => ['destroy']]);
+        date_default_timezone_set('Asia/Dubai');
     }
     public function index(Request $request)
     {
@@ -242,7 +242,7 @@ class CustomerController extends Controller
     {
         try {
             $customer = Customer::findOrFail($id);
-        $customer = Customer::with(['upcomingPayments'])->find($id);
+            $customer = Customer::with(['upcomingPayments'])->find($id);
 
             $services = Service::all();
             $settings = Setting::first();
@@ -420,15 +420,14 @@ class CustomerController extends Controller
 
     public function show($id)
     {
-        
-        $customer = Customer::with(['branch', 'services', 'upcomingPayments', 'media',"ftamedia"])->find($id);
+
+        $customer = Customer::with(['branch', 'services', 'upcomingPayments', 'media', "ftamedia"])->find($id);
         if (!$customer) {
             return response()->json(['error' => __('Customer not found.')], 404);
         }
         // Check if the user has the appropriate role
-        if (!(Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Supervisor'))) {
-            return response()->json(['error' => __('Customer not found or access denied.')], 404);
-        }
+        // if (!(Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Supervisor'))) {
+
 
         $selectedServices = $customer->services()->pluck('services.id')->toArray();
         $upcoming_payments = $customer->upcoming_payments;
@@ -447,7 +446,7 @@ class CustomerController extends Controller
 
     public function servicesDetails($id)
     {
-        
+
         $customer = Customer::findOrFail($id);
         if (!$customer) {
             return response()->json(['error' => __('Customer not found.')], 404);
@@ -456,15 +455,15 @@ class CustomerController extends Controller
         if (!(Auth::user()->hasRole('Admin') || Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Supervisor'))) {
             return response()->json(['error' => __('Customer not found or access denied.')], 404);
         }
-        
-       
+
+
         $servicesDetails = $customer->document_details ? json_decode($customer->document_details, true) : [];
         return response()->json([
             'servicesDetails' => $servicesDetails,
         ]);
     }
 
-    
+
     public function groupedMedia($id)
     {
         $customer = Customer::findOrFail($id);
@@ -698,7 +697,7 @@ class CustomerController extends Controller
         }
 
         try {
-            $customerId = $request->id; 
+            $customerId = $request->id;
             $customer = Customer::findOrFail($customerId);
             $customer->document_details = json_encode($request->all());
             $customer->save();
