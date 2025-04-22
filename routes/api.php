@@ -23,16 +23,9 @@ Route::get('/sanctum/csrf-cookie', [CsrfCookieController::class, 'show']);
 Route::get('/test', function () {
     return response()->json(['message' => User::all()]);
 });
-
+    
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware(['auth:api']);
-
-// Route::post('/login', [LoginController::class, 'login']);
-// Route::middleware(['auth:api', 'permission:user-list'])->get('/user', function (Request $request) {
-//     $user = $request->user();
-//     $permissions = $user->getAllPermissions();
-//     return response()->json(['user' => $user, 'permissions' => $permissions]);
-// });
 
 
 
