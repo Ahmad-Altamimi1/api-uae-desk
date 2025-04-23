@@ -1080,10 +1080,8 @@ class CustomerController extends Controller
 
         ];
 
-        // ✅ Load the invoice view and generate PDF
         $pdf = PDF::loadView('invoice.invoice-pdf', $invoiceData);
 
-        // ✅ Define PDF directory and file path
         $pdfDirectory = storage_path('app/public/invoices');
         $pdfFilePath = $pdfDirectory . '/invoice-' . $customer->id . '.pdf';
 
