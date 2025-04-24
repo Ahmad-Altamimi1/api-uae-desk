@@ -91,15 +91,8 @@ return [
         //     'table' => 'users',
         // ],
 
-        'patients' => [
-            'driver'    => 'eloquent',
-            'model'     => App\Models\Patient::class,
-        ],
+       
 
-        'doctors' => [
-            'driver'    => 'eloquent',
-            'model'     => App\Models\Doctor::class,
-        ],
     ],
 
     /*
