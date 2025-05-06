@@ -22,6 +22,7 @@ class Customer extends Model
         'address',
         'status',
         'created_by',
+        'created_at',
         'customer_code',
         'invoice_number',
         'price',
@@ -79,7 +80,7 @@ class Customer extends Model
 public function getDataEntryTimeAttribute()
 {
     $start = Carbon::parse($this->created_at);
-    $end = $this->submitted_for_verification_at 
+    $end = $this->submitted_for_verification_at
         ? Carbon::parse($this->submitted_for_verification_at)
         : null;
 
@@ -94,10 +95,10 @@ public function getDataEntryTimeAttribute()
     public function getExpertVerificationTimeAttribute()
     {
         $start =$this->submitted_for_verification_at ? Carbon::parse($this->submitted_for_verification_at):null;
-        $end= $this->expert_submitted_at 
+        $end= $this->expert_submitted_at
         ? Carbon::parse($this->expert_submitted_at)
         : null;
-        return 
+        return
             [
                 'start' => $start,
                 'end' =>$end,
@@ -108,7 +109,7 @@ public function getDataEntryTimeAttribute()
     public function getSupervisorApprovalTimeAttribute()
     {
            $start =$this->expert_submitted_at? Carbon::parse($this->expert_submitted_at):null;
-        $end= $this->supervisor_approved_at 
+        $end= $this->supervisor_approved_at
         ? Carbon::parse($this->supervisor_approved_at)
         : null;
         return [

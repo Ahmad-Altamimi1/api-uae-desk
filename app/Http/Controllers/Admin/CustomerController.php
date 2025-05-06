@@ -71,15 +71,12 @@ class CustomerController extends Controller
                 'phone_number' => $customer->phone_number,
                 'email' => $customer->email,
                 'customer_code' => $customer->customer_code,
-
-
+                'invoice_number' => $customer->invoice_number,
                 'branch' => $customer->branch ? $customer->branch->branch_name : null,
                 'services' => $customer->services->pluck('name'),
-                'created_reviewed_by' => (auth()->user()->hasRole('Admin') || auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('supervisor'))
-                    ? [
-                        'created_by' => $customer->creator ? $customer->creator->name : 'N/A',
-                        'reviewed_by' => $customer->review ? $customer->review->name : 'N/A',
-                    ] : null,
+                'created_by' => $customer->creator ? $customer->creator->name : 'N/A',
+                'reviewed_by' => $customer->review ? $customer->review->name : 'N/A',
+                'created_at' => $customer->created_at->format('Y-m-d H:i:s'),
                 'status' => $customer->status,
                 // 'actions' => [
                 //     'view' => (Gate::check('customers-view') || auth()->user()->hasRole('supervisor'))
